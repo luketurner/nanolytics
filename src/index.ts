@@ -40,6 +40,20 @@ Bun.serve({
   port: DASHBOARD_PORT,
   routes: {
     "/": indexHtml,
+    "/api/events": {
+      GET: (req) => {
+        return Response.json(db.query("SELECT * FROM events").all());
+      },
+    },
+    "/api/event/:id": {
+      GET: (req) => {
+        return Response.json(
+          db
+            .query("SELECT * FROM events WHERE id = :id")
+            .all({ id: req.params.id })
+        );
+      },
+    },
   },
 });
 
