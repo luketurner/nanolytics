@@ -6,7 +6,7 @@
   "scripts": {
     "build": "bun build --outfile dist/client.js src/client.ts --minify",
     "build:dev": "bun build --outfile dist/client.js src/client.ts --watch",
-    "dev": "bun run src/index.ts --watch"
+    "dev": "bun run src/index.ts --hot"
   },
   "devDependencies": {
     "@types/bun": "latest"
