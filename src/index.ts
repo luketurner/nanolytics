@@ -2,9 +2,11 @@ import { z } from "zod/v4";
 import { Database } from "bun:sqlite";
 import { getVisitId } from "./shared";
 import { sha } from "bun";
+import indexHtml from "./index.html";
 
 const DB_FILE = process.env.DB_FILE || "local/db.sqlite";
 const PORT = process.env.PORT || 3000;
+const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
 
 const db = new Database(DB_FILE, { strict: true, create: true });
 
@@ -33,6 +35,13 @@ const finishApiSchema = z.object({
 export function getUserId(ip: string) {
   return Buffer.from(sha(ip) as any).toBase64();
 }
+
+Bun.serve({
+  port: DASHBOARD_PORT,
+  routes: {
+    "/": indexHtml,
+  },
+});
 
 Bun.serve({
   port: PORT,
@@ -100,3 +109,4 @@ Bun.serve({
   },
 });
 console.log(`Listening on port ${PORT}`);
+console.log(`Dashboard listening on port ${DASHBOARD_PORT}`);
