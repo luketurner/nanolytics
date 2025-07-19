@@ -2,7 +2,7 @@ import { z } from "zod/v4";
 import { Database } from "bun:sqlite";
 import { getVisitId } from "./shared";
 import { sha } from "bun";
-import indexHtml from "./index.html";
+import dashboardIndex from "./dashboard/index.html";
 
 const DB_FILE = process.env.DB_FILE || "local/db.sqlite";
 const PORT = process.env.PORT || 3000;
@@ -39,7 +39,7 @@ export function getUserId(ip: string) {
 Bun.serve({
   port: DASHBOARD_PORT,
   routes: {
-    "/": indexHtml,
+    "/": dashboardIndex,
     "/api/events": {
       GET: (req) => {
         return Response.json(db.query("SELECT * FROM events").all());
