@@ -7,3 +7,5 @@
 - [ ] Figure out how to get Referer info for noscript.gif route
 - [ ] Ensure IP address check works in Fly, do we need to read the Fly IP header instead?
 - [ ] Are there cases where we need to listen for beforeunload or is visibilitychange enough?
+- [ ] Create Dockerfile for Fly deployment
+- [ ] Maybe create separate package.json for frontend so we can use `bun --filter '*' dev`?
