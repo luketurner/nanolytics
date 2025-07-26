@@ -1,27 +1,11 @@
 import { useEvents } from "../hooks";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "./ui/navigation-menu";
+import { LookbackChooser } from "./lookback-chooser";
 
 export const Home = () => {
   const { data: events } = useEvents();
   return (
     <>
-      <NavigationMenu>
-        <NavigationMenuList>
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <NavigationMenuLink>Link</NavigationMenuLink>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-        </NavigationMenuList>
-      </NavigationMenu>
+      <LookbackChooser />
       <ul>
         {events?.map((e) => (
           <li>{JSON.stringify(e)}</li>
