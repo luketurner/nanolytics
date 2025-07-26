@@ -4,9 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun build --outfile dist/client.js src/client.ts --minify",
-    "build:dev": "bun build --outfile dist/client.js src/client.ts --watch",
-    "dev": "bun run src/index.ts --hot"
+    "build": "bun build --outfile dist/tracker.js src/tracker/index.ts --minify",
+    "build:dev": "bun build --outfile dist/tracker.js src/tracker/index.ts --watch",
+    "dev": "bun run src/server/index.ts --hot"
   },
   "devDependencies": {
     "@types/bun": "latest"

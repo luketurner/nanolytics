@@ -1,25 +1,15 @@
+import "@/server-only";
 import { z } from "zod/v4";
-import { Database } from "bun:sqlite";
-import { getVisitId } from "./shared";
-import { sha } from "bun";
-import dashboardIndex from "./dashboard/index.html";
-
-const DB_FILE = process.env.DB_FILE || "local/db.sqlite";
-const PORT = process.env.PORT || 3000;
-const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
-
-const db = new Database(DB_FILE, { strict: true, create: true });
-
-db.run("PRAGMA journal_mode = WAL");
-db.run("PRAGMA foreign_keys = ON");
-
-db.run(`CREATE TABLE IF NOT EXISTS events (
-  id TEXT PRIMARY KEY,
-  user_id TEXT,
-  url TEXT,
-  start_time DATETIME,
-  end_time DATETIME
-) WITHOUT ROWID`);
+import { randomUUID } from "crypto";
+import dashboardIndex from "@/dashboard/index.html";
+import { getUserId } from "@/util/user-id";
+import { DASHBOARD_PORT, PORT } from "@/config";
+import {
+  createEvent,
+  getAllEvents,
+  getEventById,
+  updateEvent,
+} from "@/evemts/model";
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -32,26 +22,18 @@ const finishApiSchema = z.object({
   end_time: z.number(),
 });
 
-export function getUserId(ip: string) {
-  return Buffer.from(sha(ip) as any).toBase64();
-}
-
 Bun.serve({
   port: DASHBOARD_PORT,
   routes: {
     "/": dashboardIndex,
     "/api/events": {
       GET: (req) => {
-        return Response.json(db.query("SELECT * FROM events").all());
+        return Response.json(getAllEvents());
       },
     },
     "/api/event/:id": {
       GET: (req) => {
-        return Response.json(
-          db
-            .query("SELECT * FROM events WHERE id = :id")
-            .all({ id: req.params.id })
-        );
+        return Response.json(getEventById(req.params.id));
       },
     },
   },
@@ -71,12 +53,10 @@ Bun.serve({
       GET: (req: Bun.BunRequest<"/noscript.gif">, server) => {
         const address = server.requestIP(req);
         if (address) {
-          db.query(
-            "INSERT INTO events (id, user_id, url, start_time) VALUES (:id, :user_id, :url, :start_time)"
-          ).run({
-            id: getVisitId(),
+          createEvent({
+            id: randomUUID(),
             user_id: getUserId(address.address),
-            url: null, // TODO -- get request URL for noscript.gif? Can we get this in Referer somehow?
+            url: "/", // TODO -- get request URL for noscript.gif? Can we get this in Referer somehow?
             start_time: Date.now(),
           });
         }
@@ -100,10 +80,9 @@ Bun.serve({
         if (!address) {
           return Response.error();
         }
-        db.query(
-          "INSERT INTO events (id, user_id, url, start_time, end_time) VALUES (:id, :user_id, :url, :start_time, :end_time)"
-        ).run({
+        createEvent({
           ...body,
+          url: "/", // TODO
           user_id: getUserId(address.address),
         });
 
@@ -113,10 +92,7 @@ Bun.serve({
     "/finish": {
       POST: async (req) => {
         const body = finishApiSchema.parse(await req.json());
-        db.query("UPDATE events SET end_time = :end_time WHERE id = :id").run(
-          body
-        );
-
+        updateEvent(body.id, { end_time: body.end_time });
         return Response.json({ status: "ok" });
       },
     },

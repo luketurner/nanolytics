@@ -1,6 +1,4 @@
-import { getVisitId } from "./shared";
-
-const id = getVisitId();
+const id = window.crypto.randomUUID();
 const baseUrl = "http://localhost:3000";
 
 navigator.sendBeacon(
