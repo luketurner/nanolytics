@@ -13,6 +13,7 @@ import {
 
 const recordApiSchema = z.object({
   id: z.uuid(),
+  url: z.string(),
   start_time: z.number(),
   end_time: z.number().nullable(),
 });
@@ -58,7 +59,7 @@ Bun.serve({
             user_id: getUserId(address.address),
             url: "/", // TODO -- get request URL for noscript.gif?
             start_time: Date.now(),
-is_noscript: true,
+            is_noscript: true,
           });
         }
 
@@ -83,7 +84,6 @@ is_noscript: true,
         }
         createEvent({
           ...body,
-          url: "/", // TODO
           user_id: getUserId(address.address),
         });
 

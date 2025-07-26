@@ -5,7 +5,7 @@ navigator.sendBeacon(
   new URL("/record", baseUrl),
   JSON.stringify({
     id,
-    url: location.href,
+    url: location.pathname,
     start_time: Date.now(),
     end_time: null,
   })
