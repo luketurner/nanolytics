@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useAppState } from "./components/app";
 
 export interface Event {
   id: string;
@@ -9,10 +10,13 @@ export interface Event {
 }
 
 export const useEvents = () => {
+  const [appState] = useAppState();
   return useQuery({
-    queryKey: ["events"],
+    queryKey: ["events", appState.lookback],
     queryFn: async (): Promise<Event[]> => {
-      return await (await fetch("/api/events")).json();
+      return await (
+        await fetch(`/api/events?looback=${appState.lookback}`)
+      ).json();
     },
   });
 };

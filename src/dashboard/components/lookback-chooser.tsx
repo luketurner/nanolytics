@@ -10,9 +10,12 @@ import {
 
 export const LookbackChooser = () => {
   const [appState, setAppState] = useAppState();
-  const handleLookbackChange = useCallback((newValue: number) => {
-    setAppState({ ...appState, lookback: newValue });
-  }, []);
+  const handleLookbackChange = useCallback(
+    async (newValue: number) => {
+      setAppState({ ...appState, lookback: newValue });
+    },
+    [setAppState]
+  );
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
