@@ -1,3 +1,4 @@
+import "@/server-only";
 import { sha } from "bun";
 
 export function getUserId(ip: string) {

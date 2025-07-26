@@ -1,3 +1,4 @@
+import "@/server-only";
 import { Database } from "bun:sqlite";
 import { DB_FILE } from "@/config";
 import { createEventTable } from "./evemts/model";
