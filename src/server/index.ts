@@ -31,7 +31,7 @@ Bun.serve({
       GET: (req: Bun.BunRequest<"/api/events">) => {
         const queryParams = new URLSearchParams(new URL(req.url).search);
         return Response.json(
-          getAllEvents(parseInt(queryParams.get("lookback"), 10) ?? 7)
+          getAllEvents(parseInt(queryParams.get("lookback") ?? "7", 10))
         );
       },
     },
