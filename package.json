@@ -6,7 +6,8 @@
   "scripts": {
     "build": "bun build --outfile dist/tracker.js src/tracker/index.ts --minify",
     "build:dev": "bun build --outfile dist/tracker.js src/tracker/index.ts --watch",
-    "dev": "bun --inspect run --hot src/server/index.ts"
+    "dev": "bun --inspect run --hot src/server/index.ts",
+    "start": "bun run src/server/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
