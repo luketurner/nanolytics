@@ -1,5 +1,10 @@
 import "@/server-only";
-import { eventSchema, type UserEvent, type UserEventId } from "./schema";
+import {
+  eventSchema,
+  type UserEvent,
+  type UserEventId,
+  type UserEventInput,
+} from "./schema";
 import { db } from "@/db";
 import {
   createKeysForObject,
@@ -22,7 +27,7 @@ export function getEventById(id: UserEventId): UserEvent {
   );
 }
 
-export function createEvent(data: UserEvent): UserEvent {
+export function createEvent(data: UserEventInput): UserEvent {
   const validData = eventSchema.parse(data);
   return eventSchema.parse(
     db
@@ -37,7 +42,7 @@ export function createEvent(data: UserEvent): UserEvent {
 
 export function updateEvent(
   id: UserEventId,
-  data: Partial<UserEvent>
+  data: Partial<UserEventInput>
 ): UserEvent {
   const validData = eventSchema.partial().parse(data);
   return eventSchema.parse(
@@ -57,6 +62,7 @@ export function createEventTable() {
     user_id TEXT,
     url TEXT,
     start_time DATETIME,
-    end_time DATETIME
+    end_time DATETIME,
+    is_noscript BOOLEAN
   ) WITHOUT ROWID`);
 }

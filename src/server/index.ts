@@ -56,8 +56,9 @@ Bun.serve({
           createEvent({
             id: randomUUID(),
             user_id: getUserId(address.address),
-            url: "/", // TODO -- get request URL for noscript.gif? Can we get this in Referer somehow?
+            url: "/", // TODO -- get request URL for noscript.gif?
             start_time: Date.now(),
+is_noscript: true,
           });
         }
 

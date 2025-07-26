@@ -13,3 +13,12 @@ export function updateForObject(object: Record<string, any>): string {
     .map((k) => `${k} = :${k}`)
     .join(", ");
 }
+
+export function booleanFromNumber(
+  value: boolean | number | null | undefined
+): undefined | boolean {
+  if (value === 1) return true;
+  if (value === 0) return false;
+  if (typeof value === "boolean") return value;
+  return undefined;
+}
