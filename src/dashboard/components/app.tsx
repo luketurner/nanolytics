@@ -4,12 +4,16 @@ import { createContext, useContext, useState } from "react";
 
 export const queryClient = new QueryClient();
 
+export type AggregationType = "visitors" | "visits";
+
 export interface AppState {
   lookback: number;
+  aggregationType: AggregationType;
 }
 
-const defaultState = {
+const defaultState: AppState = {
   lookback: 7,
+  aggregationType: "visitors",
 };
 
 const AppStateContext = createContext<
