@@ -15,7 +15,7 @@ export const useEvents = () => {
     queryKey: ["events", appState.lookback],
     queryFn: async (): Promise<Event[]> => {
       return await (
-        await fetch(`/api/events?looback=${appState.lookback}`)
+        await fetch(`/api/events?lookback=${appState.lookback}`)
       ).json();
     },
   });
