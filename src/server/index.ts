@@ -42,9 +42,9 @@ Bun.serve({
 Bun.serve({
   port: PORT,
   routes: {
-    "/client.js": {
+    "/tracker.js": {
       GET: () => {
-        const resp = new Response(Bun.file("./dist/client.js"));
+        const resp = new Response(Bun.file("./dist/tracker.js"));
         resp.headers.set("access-control-allow-origin", "*");
         return resp;
       },
