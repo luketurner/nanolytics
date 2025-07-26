@@ -28,8 +28,11 @@ Bun.serve({
   routes: {
     "/": dashboardIndex,
     "/api/events": {
-      GET: (req) => {
-        return Response.json(getAllEvents());
+      GET: (req: Bun.BunRequest<"/api/events">) => {
+        const queryParams = new URLSearchParams(new URL(req.url).search);
+        return Response.json(
+          getAllEvents(parseInt(queryParams.get("lookback"), 10) ?? 7)
+        );
       },
     },
     "/api/event/:id": {
