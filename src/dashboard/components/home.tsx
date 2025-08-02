@@ -1,6 +1,7 @@
 import { useEvents } from "../hooks";
 import { useAppState, type AggregationType } from "./app";
 import { LookbackChooser } from "./lookback-chooser";
+import { PageTable } from "./page-table";
 import { Button } from "./ui/button";
 
 export const Home = () => {
@@ -37,11 +38,7 @@ export const Home = () => {
           Visits: {numVisits}
         </Button>
       </div>
-      <ul>
-        {events?.map((e) => (
-          <li>{JSON.stringify(e)}</li>
-        ))}
-      </ul>
+      <PageTable />
     </>
   );
 };
