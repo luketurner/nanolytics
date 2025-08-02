@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { useAppState } from "./app";
 import { Button } from "./ui/button";
 import {
@@ -10,12 +9,11 @@ import {
 
 export const LookbackChooser = () => {
   const [appState, setAppState] = useAppState();
-  const handleLookbackChange = useCallback(
-    async (newValue: number) => {
-      setAppState({ ...appState, lookback: newValue });
-    },
-    [setAppState]
-  );
+  const handleLookbackChange = async (newValue: number) => {
+    setAppState((draft) => {
+      draft.lookback = newValue;
+    });
+  };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>

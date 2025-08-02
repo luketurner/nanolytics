@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Home } from "./home";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext } from "react";
+import { useImmer, type ImmerHook } from "use-immer";
 
 export const queryClient = new QueryClient();
 
@@ -16,16 +17,17 @@ const defaultState: AppState = {
   aggregationType: "visitors",
 };
 
-const AppStateContext = createContext<
-  [AppState, React.Dispatch<React.SetStateAction<AppState>>]
->([defaultState, () => {}]);
+const AppStateContext = createContext<ImmerHook<AppState>>([
+  defaultState,
+  () => {},
+]);
 
 export const useAppState = () => {
   return useContext(AppStateContext);
 };
 
 export const App = () => {
-  const state = useState(defaultState);
+  const state = useImmer(defaultState);
   return (
     <QueryClientProvider client={queryClient}>
       <AppStateContext.Provider value={state}>

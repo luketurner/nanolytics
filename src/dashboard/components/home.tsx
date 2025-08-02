@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { useEvents } from "../hooks";
 import { useAppState, type AggregationType } from "./app";
 import { LookbackChooser } from "./lookback-chooser";
@@ -12,12 +11,11 @@ export const Home = () => {
     return visitors;
   }, new Set()).size;
   const numVisits = events?.length;
-  const changeAggregationType = useCallback(
-    (newType: AggregationType) => {
-      setAppState({ ...appState, aggregationType: newType });
-    },
-    [setAppState]
-  );
+  const changeAggregationType = (newType: AggregationType) => {
+    setAppState((draft) => {
+      draft.aggregationType = newType;
+    });
+  };
   return (
     <>
       <LookbackChooser />
