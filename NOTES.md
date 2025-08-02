@@ -18,7 +18,9 @@ Select window to analyze
 
 Aggregate tables based on either unique visitors or page views
 
-- Table of pages, with # of hits per path, # of uniques, avg. time spent. Include "total" as well.
+- [x] Table of pages, with # of hits per path, # of uniques
+- [x] show avg. time spent per page.
+- [x] Include "Total" in charts
 - Table of hostnames
 - Table of referrers?
 - Table of countries if we can
