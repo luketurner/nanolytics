@@ -14,6 +14,9 @@ bun run build:tracker:dev
 # run dev server
 bun run dev
 
+# Run demo app (for testing tracker script)
+bun run demo
+
 # build single-file executable
 bun run build
 ```

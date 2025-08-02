@@ -7,6 +7,7 @@
     "build:tracker": "bun build --outfile dist/tracker.js src/tracker/index.ts --minify",
     "build:tracker:dev": "bun build --outfile dist/tracker.js src/tracker/index.ts --watch",
     "dev": "bun --inspect run --hot src/index.ts",
+    "demo": "bun run scripts/demo.ts",
     "build:tailwindcss": "tailwindcss -i src/dashboard/index.css -o src/dashboard/index.compiled.css",
     "build:server": "bun build --define RELEASE=true --compile --minify --sourcemap src/index.ts --outfile dist/nanolytics",
     "build": "bun run build:tailwindcss && bun run build:tracker && bun run build:server",
