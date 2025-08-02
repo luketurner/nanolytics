@@ -2,6 +2,11 @@ import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { App } from "./components/app";
 import "./index.css";
+import { RELEASE } from "./config";
+
+if (RELEASE) {
+  await import("./index.compiled.css"!);
+}
 
 const elem = document.getElementById("root")!;
 const app = (

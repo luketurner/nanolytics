@@ -4,10 +4,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun build --outfile dist/tracker.js src/tracker/index.ts --minify",
-    "build:dev": "bun build --outfile dist/tracker.js src/tracker/index.ts --watch",
-    "dev": "bun --inspect run --hot src/server/index.ts",
-    "start": "bun run src/server/index.ts"
+    "build:tracker": "bun build --outfile dist/tracker.js src/tracker/index.ts --minify",
+    "build:tracker:dev": "bun build --outfile dist/tracker.js src/tracker/index.ts --watch",
+    "dev": "bun --inspect run --hot src/index.ts",
+    "build:tailwindcss": "tailwindcss -i src/dashboard/index.css -o src/dashboard/index.compiled.css",
+    "build:server": "bun build --define RELEASE=true --compile --minify --sourcemap src/index.ts --outfile dist/nanolytics",
+    "build": "bun run build:tailwindcss && bun run build:tracker && bun run build:server"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -19,6 +21,7 @@
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-navigation-menu": "^1.2.13",
     "@radix-ui/react-slot": "^1.2.3",
+    "@tailwindcss/cli": "^4.1.11",
     "@tanstack/react-query": "^5.83.0",
     "@types/react-dom": "^19.1.6",
     "bun-plugin-tailwind": "^0.0.15",
