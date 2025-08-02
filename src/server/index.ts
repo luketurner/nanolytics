@@ -10,6 +10,8 @@ import {
   getEventById,
   updateEvent,
 } from "@/evemts/model";
+import noscript from "@/tracker/noscript.gif" with { type: "file" };
+import tracker from "dist/tracker.js" with { type: "file" };
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -23,84 +25,86 @@ const finishApiSchema = z.object({
   end_time: z.number(),
 });
 
-Bun.serve({
-  port: DASHBOARD_PORT,
-  routes: {
-    "/": dashboardIndex,
-    "/api/events": {
-      GET: (req: Bun.BunRequest<"/api/events">) => {
-        const queryParams = new URLSearchParams(new URL(req.url).search);
-        return Response.json(
-          getAllEvents(parseInt(queryParams.get("lookback") ?? "7", 10))
-        );
+export function startServer() {
+  Bun.serve({
+    port: DASHBOARD_PORT,
+    routes: {
+      "/": dashboardIndex,
+      "/api/events": {
+        GET: (req: Bun.BunRequest<"/api/events">) => {
+          const queryParams = new URLSearchParams(new URL(req.url).search);
+          return Response.json(
+            getAllEvents(parseInt(queryParams.get("lookback") ?? "7", 10))
+          );
+        },
+      },
+      "/api/event/:id": {
+        GET: (req) => {
+          return Response.json(getEventById(req.params.id));
+        },
       },
     },
-    "/api/event/:id": {
-      GET: (req) => {
-        return Response.json(getEventById(req.params.id));
-      },
-    },
-  },
-});
+  });
 
-Bun.serve({
-  port: PORT,
-  routes: {
-    "/tracker.js": {
-      GET: () => {
-        const resp = new Response(Bun.file("./dist/tracker.js"));
-        resp.headers.set("access-control-allow-origin", "*");
-        return resp;
+  Bun.serve({
+    port: PORT,
+    routes: {
+      "/tracker.js": {
+        GET: () => {
+          const resp = new Response(Bun.file(tracker));
+          resp.headers.set("access-control-allow-origin", "*");
+          return resp;
+        },
       },
-    },
-    "/noscript.gif": {
-      GET: (req: Bun.BunRequest<"/noscript.gif">, server) => {
-        const address = server.requestIP(req);
-        if (address) {
+      "/noscript.gif": {
+        GET: (req: Bun.BunRequest<"/noscript.gif">, server) => {
+          const address = server.requestIP(req);
+          if (address) {
+            createEvent({
+              id: randomUUID(),
+              user_id: getUserId(address.address),
+              url: "/", // TODO -- get request URL for noscript.gif?
+              start_time: Date.now(),
+              is_noscript: true,
+            });
+          }
+
+          const resp = new Response(Bun.file(noscript));
+          resp.headers.set(
+            "cache-control",
+            "no-cache, no-store, must-revalidate"
+          );
+          resp.headers.set("expires", "0");
+          resp.headers.set("pragma", "no-cache");
+          resp.headers.set("access-control-allow-origin", "*");
+
+          return resp;
+        },
+      },
+      "/record": {
+        POST: async (req, server) => {
+          const body = recordApiSchema.parse(await req.json());
+          const address = server.requestIP(req);
+          if (!address) {
+            return Response.error();
+          }
           createEvent({
-            id: randomUUID(),
+            ...body,
             user_id: getUserId(address.address),
-            url: "/", // TODO -- get request URL for noscript.gif?
-            start_time: Date.now(),
-            is_noscript: true,
           });
-        }
 
-        const resp = new Response(Bun.file("./dist/noscript.gif"));
-        resp.headers.set(
-          "cache-control",
-          "no-cache, no-store, must-revalidate"
-        );
-        resp.headers.set("expires", "0");
-        resp.headers.set("pragma", "no-cache");
-        resp.headers.set("access-control-allow-origin", "*");
-
-        return resp;
+          return Response.json({ status: "ok" });
+        },
+      },
+      "/finish": {
+        POST: async (req) => {
+          const body = finishApiSchema.parse(await req.json());
+          updateEvent(body.id, { end_time: body.end_time });
+          return Response.json({ status: "ok" });
+        },
       },
     },
-    "/record": {
-      POST: async (req, server) => {
-        const body = recordApiSchema.parse(await req.json());
-        const address = server.requestIP(req);
-        if (!address) {
-          return Response.error();
-        }
-        createEvent({
-          ...body,
-          user_id: getUserId(address.address),
-        });
-
-        return Response.json({ status: "ok" });
-      },
-    },
-    "/finish": {
-      POST: async (req) => {
-        const body = finishApiSchema.parse(await req.json());
-        updateEvent(body.id, { end_time: body.end_time });
-        return Response.json({ status: "ok" });
-      },
-    },
-  },
-});
-console.log(`Listening on port ${PORT}`);
-console.log(`Dashboard listening on port ${DASHBOARD_PORT}`);
+  });
+  console.log(`Listening on port ${PORT}`);
+  console.log(`Dashboard listening on port ${DASHBOARD_PORT}`);
+}
