@@ -51,7 +51,7 @@ export function startServer() {
     routes: {
       "/tracker.js": {
         GET: () => {
-          const resp = new Response(Bun.file(tracker));
+          const resp = new Response(Bun.file(tracker as string));
           resp.headers.set("access-control-allow-origin", "*");
           return resp;
         },
