@@ -28,4 +28,9 @@ export function createSitesTable() {
     id TEXT PRIMARY KEY,
     hostnames JSONB
   ) WITHOUT ROWID`);
+
+  // TODO -- testing
+  db.run(
+    `INSERT INTO sites VALUES ('edb73139-24fe-41f1-9089-52b9fbf71bbf', '["localhost:3000", "localhost:8000"]') ON CONFLICT DO NOTHING`
+  );
 }
