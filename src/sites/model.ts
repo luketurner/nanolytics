@@ -14,13 +14,13 @@ export function getAllSites(): Site[] {
 
 export function getSiteForHostname(hostname: string | null): Site | null {
   if (!hostname) return null;
-  return siteSchema.parse(
-    db
-      .query(
-        `SELECT * FROM ${tableName}, jsonb_each(${tableName}.hostnames) WHERE jsonb_each.value = :hostname`
-      )
-      .get({ hostname })
-  );
+  const result = db
+    .query(
+      `SELECT sites.id, hostnames FROM ${tableName}, json_each(${tableName}.hostnames) WHERE json_each.value = :hostname`
+    )
+    .get({ hostname });
+  if (!result) return null;
+  return siteSchema.parse(result);
 }
 
 export function createSitesTable() {
