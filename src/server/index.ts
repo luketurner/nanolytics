@@ -12,6 +12,7 @@ import {
 } from "@/evemts/model";
 import noscript from "@/tracker/noscript.gif" with { type: "file" };
 import tracker from "dist/tracker.js" with { type: "file" };
+import { parseUserAgent } from "@/util/user-agent";
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -60,12 +61,21 @@ export function startServer() {
         GET: (req: Bun.BunRequest<"/noscript.gif">, server) => {
           const address = server.requestIP(req);
           if (address) {
+            const parsedUserAgent = parseUserAgent(
+              req.headers.get("user-agent") ?? ""
+            );
+
             createEvent({
               id: randomUUID(),
               user_id: getUserId(address.address),
               url: "/", // TODO -- get request URL for noscript.gif?
               start_time: Date.now(),
               is_noscript: true,
+              user_agent: parsedUserAgent.raw,
+              browser: parsedUserAgent.browser,
+              device_type: parsedUserAgent.deviceType,
+              operating_system: parsedUserAgent.os,
+              hostname: req.headers.get("host"),
             });
           }
 
@@ -88,9 +98,17 @@ export function startServer() {
           if (!address) {
             return Response.error();
           }
+          const parsedUserAgent = parseUserAgent(
+            req.headers.get("user-agent") ?? ""
+          );
           createEvent({
             ...body,
             user_id: getUserId(address.address),
+            hostname: req.headers.get("host"),
+            user_agent: parsedUserAgent.raw,
+            browser: parsedUserAgent.browser,
+            device_type: parsedUserAgent.deviceType,
+            operating_system: parsedUserAgent.os,
           });
 
           return Response.json({ status: "ok" });

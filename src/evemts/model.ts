@@ -65,6 +65,12 @@ export function createEventTable() {
     url TEXT,
     start_time DATETIME,
     end_time DATETIME,
+    referrer TEXT,
+    user_agent TEXT,
+    browser TEXT,
+    operating_system TEXT,
+    device_type TEXT,
+    hostname TEXT,
     is_noscript BOOLEAN
   ) WITHOUT ROWID`);
 }
