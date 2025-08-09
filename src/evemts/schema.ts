@@ -3,6 +3,7 @@ import { browserTypes, deviceTypes, operatingSystems } from "@/util/user-agent";
 import { z } from "zod/v4";
 
 export const eventSchema = z.object({
+  site_id: z.uuid(),
   id: z.uuid(),
   user_id: z.string(),
   url: z.string(),

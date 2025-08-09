@@ -13,6 +13,7 @@ import {
 import noscript from "@/tracker/noscript.gif" with { type: "file" };
 import tracker from "dist/tracker.js" with { type: "file" };
 import { parseUserAgent } from "@/util/user-agent";
+import { getSiteForHostname } from "@/sites/model";
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -66,18 +67,26 @@ export function startServer() {
               req.headers.get("user-agent") ?? ""
             );
 
-            createEvent({
-              id: randomUUID(),
-              user_id: getUserId(address.address),
-              url: "/", // TODO -- get request URL for noscript.gif?
-              start_time: Date.now(),
-              is_noscript: true,
-              user_agent: parsedUserAgent.raw,
-              browser: parsedUserAgent.browser,
-              device_type: parsedUserAgent.deviceType,
-              operating_system: parsedUserAgent.os,
-              hostname: req.headers.get("host"),
-            });
+            // TODO -- this hostname is for the tracker, NOT the main site!
+            const hostname = req.headers.get("host");
+            const site = getSiteForHostname(hostname);
+            if (site) {
+              createEvent({
+                id: randomUUID(),
+                site_id: site.id,
+                user_id: getUserId(address.address),
+                url: "/", // TODO -- get request URL for noscript.gif?
+                start_time: Date.now(),
+                is_noscript: true,
+                user_agent: parsedUserAgent.raw,
+                browser: parsedUserAgent.browser,
+                device_type: parsedUserAgent.deviceType,
+                operating_system: parsedUserAgent.os,
+                hostname,
+              });
+            } else {
+              console.warn("Hostname doesn't match any site:", hostname);
+            }
           }
 
           const resp = new Response(Bun.file(noscript));
@@ -102,15 +111,24 @@ export function startServer() {
           const parsedUserAgent = parseUserAgent(
             req.headers.get("user-agent") ?? ""
           );
-          createEvent({
-            ...body,
-            user_id: getUserId(address.address),
-            hostname: req.headers.get("host"),
-            user_agent: parsedUserAgent.raw,
-            browser: parsedUserAgent.browser,
-            device_type: parsedUserAgent.deviceType,
-            operating_system: parsedUserAgent.os,
-          });
+          // TODO -- this hostname is for the tracker, NOT the main site!
+          const hostname = req.headers.get("host");
+          const site = getSiteForHostname(hostname);
+
+          if (site) {
+            createEvent({
+              ...body,
+              site_id: site.id,
+              user_id: getUserId(address.address),
+              hostname,
+              user_agent: parsedUserAgent.raw,
+              browser: parsedUserAgent.browser,
+              device_type: parsedUserAgent.deviceType,
+              operating_system: parsedUserAgent.os,
+            });
+          } else {
+            console.warn("Hostname doesn't match any site:", hostname);
+          }
 
           return Response.json({ status: "ok" });
         },

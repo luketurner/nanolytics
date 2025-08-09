@@ -61,6 +61,7 @@ export function updateEvent(
 export function createEventTable() {
   db.run(`CREATE TABLE IF NOT EXISTS events (
     id TEXT PRIMARY KEY,
+    site_id TEXT,
     user_id TEXT,
     url TEXT,
     start_time DATETIME,
