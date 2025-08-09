@@ -2,7 +2,7 @@
 
 - [ ] Add geolocation based on IP address (need 3rd party service?)
 - [ ] Test with multiple tabs, try to break the record script
-- [ ] Add dashboard
+- [x] Add dashboard
 - [ ] Test CORS headers / separate domains
 - [x] Figure out how to get Referer info for noscript.gif route (Not possible)
 - [ ] Ensure IP address check works in Fly, do we need to read the Fly IP header instead?
@@ -11,6 +11,13 @@
 - [ ] Maybe create separate package.json for frontend so we can use `bun --filter '*' dev`?
 - [ ] Install Prisma (Or Drizzle or kysely)?
 - [x] Stop importing randomUUID on the client, use crypto.randomUUID instead
+- [ ] Experiment with TweakCN
+- [x] UI mockup
+- [ ] Add SSE
+- [ ] Hooks for aggregated event data
+- [x] Demo server improvements
+- [x] Track additional user data
+- [ ] DB import/export/download
 
 # What we want in the dashboard
 
