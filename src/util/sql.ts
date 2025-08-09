@@ -22,3 +22,10 @@ export function booleanFromNumber(
   if (typeof value === "boolean") return value;
   return undefined;
 }
+
+export function fromJSONString(value: unknown) {
+  if (typeof value === "string") {
+    return JSON.parse(value);
+  }
+  return value;
+}
