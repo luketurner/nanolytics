@@ -8,6 +8,7 @@ navigator.sendBeacon(
     url: location.pathname,
     start_time: Date.now(),
     end_time: null,
+    referrer: document.referrer,
   })
 );
 

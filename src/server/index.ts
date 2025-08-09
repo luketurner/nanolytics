@@ -19,6 +19,7 @@ const recordApiSchema = z.object({
   url: z.string(),
   start_time: z.number(),
   end_time: z.number().nullable(),
+  referrer: z.string().nullish(),
 });
 
 const finishApiSchema = z.object({
