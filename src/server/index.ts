@@ -67,8 +67,8 @@ export function startServer() {
               req.headers.get("user-agent") ?? ""
             );
 
-            // TODO -- this hostname is for the tracker, NOT the main site!
-            const hostname = req.headers.get("host");
+            const referrer = req.headers.get("referer");
+            const hostname = referrer ? new URL(referrer).host : null;
             const site = getSiteForHostname(hostname);
             if (site) {
               createEvent({
@@ -111,8 +111,9 @@ export function startServer() {
           const parsedUserAgent = parseUserAgent(
             req.headers.get("user-agent") ?? ""
           );
-          // TODO -- this hostname is for the tracker, NOT the main site!
-          const hostname = req.headers.get("host");
+
+          const origin = req.headers.get("origin");
+          const hostname = origin ? new URL(origin).host : null;
           const site = getSiteForHostname(hostname);
 
           if (site) {
