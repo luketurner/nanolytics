@@ -11,7 +11,8 @@
     "build:tailwindcss": "tailwindcss -i src/dashboard/index.css -o src/dashboard/index.compiled.css",
     "build:server": "bun build --define RELEASE=true --compile --minify --sourcemap src/index.ts --outfile dist/nanolytics",
     "build": "bun run build:tailwindcss && bun run build:tracker && bun run build:server",
-    "compile": "tsc"
+    "compile": "tsc",
+    "test": "bun test"
   },
   "devDependencies": {
     "@types/bun": "latest"
