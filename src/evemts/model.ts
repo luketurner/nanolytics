@@ -45,17 +45,16 @@ export function createEvent(data: UserEventInput): UserEvent {
 export function updateEvent(
   id: UserEventId,
   data: Partial<UserEventInput>
-): UserEvent {
+): UserEvent | null {
   const validData = eventSchema.partial().parse(data);
-  return eventSchema.parse(
-    db
-      .query(
-        `UPDATE ${tableName} SET ${updateForObject(
-          validData
-        )} WHERE id = :id RETURNING *`
-      )
-      .get({ ...validData, id })
-  );
+  const result = db
+    .query(
+      `UPDATE ${tableName} SET ${updateForObject(
+        validData
+      )} WHERE id = :id RETURNING *`
+    )
+    .get({ ...validData, id });
+  return result ? eventSchema.parse(result) : null;
 }
 
 export function createEventTable() {
