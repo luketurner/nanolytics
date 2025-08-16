@@ -13,7 +13,13 @@ import {
 import noscript from "@/tracker/noscript.gif" with { type: "file" };
 import tracker from "dist/tracker.js" with { type: "file" };
 import { parseUserAgent } from "@/util/user-agent";
-import { getAllSites, getSiteForHostname } from "@/sites/model";
+import {
+  getAllSites,
+  getSiteForHostname,
+  updateSite,
+  createSite,
+  deleteSite,
+} from "@/sites/model";
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -52,6 +58,17 @@ export function startServer() {
       "/api/sites": {
         GET: (req) => {
           return Response.json(getAllSites());
+        },
+        POST: async (req) => {
+          return Response.json(createSite(await req.json()));
+        },
+      },
+      "/api/sites/:id": {
+        POST: async (req) => {
+          return Response.json(updateSite(req.params.id, await req.json()));
+        },
+        DELETE: async (req) => {
+          return Response.json(deleteSite(req.params.id));
         },
       },
     },

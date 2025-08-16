@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAppState } from "./components/app";
 import type { Site } from "@/sites/schema";
+import { useCallback } from "react";
 
 export interface Event {
   id: string;
@@ -40,4 +41,45 @@ export const useSites = () => {
       return await (await fetch(`/api/sites`)).json();
     },
   });
+};
+
+export const useUpdateSite = () => {
+  const queryClient = useQueryClient();
+  return useCallback(
+    async (id: string, data: Partial<Site>) => {
+      await fetch(`/api/sites/${id}`, {
+        body: JSON.stringify(data),
+        method: "POST",
+      });
+      queryClient.invalidateQueries({ queryKey: ["sites"] });
+    },
+    [queryClient]
+  );
+};
+
+export const useCreateSite = () => {
+  const queryClient = useQueryClient();
+  return useCallback(
+    async (data: Partial<Omit<Site, "id">>) => {
+      await fetch(`/api/sites`, {
+        body: JSON.stringify(data),
+        method: "POST",
+      });
+      queryClient.invalidateQueries({ queryKey: ["sites"] });
+    },
+    [queryClient]
+  );
+};
+
+export const useDeleteSite = () => {
+  const queryClient = useQueryClient();
+  return useCallback(
+    async (id: string) => {
+      await fetch(`/api/sites/${id}`, {
+        method: "DELETE",
+      });
+      queryClient.invalidateQueries({ queryKey: ["sites"] });
+    },
+    [queryClient]
+  );
 };
