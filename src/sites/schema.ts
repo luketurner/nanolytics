@@ -7,3 +7,4 @@ export const siteSchema = z.object({
 });
 
 export type Site = z.infer<typeof siteSchema>;
+export type SiteId = Site["id"];

@@ -13,7 +13,7 @@ import {
 import noscript from "@/tracker/noscript.gif" with { type: "file" };
 import tracker from "dist/tracker.js" with { type: "file" };
 import { parseUserAgent } from "@/util/user-agent";
-import { getSiteForHostname } from "@/sites/model";
+import { getAllSites, getSiteForHostname } from "@/sites/model";
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -44,6 +44,11 @@ export function startServer() {
       "/api/event/:id": {
         GET: (req) => {
           return Response.json(getEventById(req.params.id));
+        },
+      },
+      "/api/sites": {
+        GET: (req) => {
+          return Response.json(getAllSites());
         },
       },
     },
