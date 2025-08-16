@@ -7,5 +7,9 @@ export const siteSchema = z.object({
   hostnames: z.preprocess(fromJSONString, z.array(z.string())),
 });
 
+export const siteSchemaClient = siteSchema.extend({
+  hostnames: z.array(z.string()),
+});
+
 export type Site = z.infer<typeof siteSchema>;
 export type SiteId = Site["id"];

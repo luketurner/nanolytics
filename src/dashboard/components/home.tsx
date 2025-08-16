@@ -1,5 +1,5 @@
 import { CogIcon } from "lucide-react";
-import { useEvents, useSites } from "../hooks";
+import { useCreateSite, useDeleteSite, useEvents, useSites } from "../hooks";
 import { useAppState, type AggregationType } from "./app";
 import { LookbackChooser } from "./lookback-chooser";
 import { PageTable } from "./page-table";
@@ -11,11 +11,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "./ui/sheet";
+import { SiteForm } from "./site-form";
 
 export const Home = () => {
   const [appState, setAppState] = useAppState();
   const { data: events } = useEvents();
   const { data: sites } = useSites();
+  const deleteSite = useDeleteSite();
+  const createSite = useCreateSite();
 
   const numVisitors = events?.reduce((visitors, event) => {
     visitors.add(event.user_id);
@@ -28,7 +38,11 @@ export const Home = () => {
     });
   };
 
-  if (sites && sites.length > 0 && !appState.siteId) {
+  if (
+    sites &&
+    sites.length > 0 &&
+    (!appState.siteId || !sites.some((s) => s.id === appState.siteId))
+  ) {
     setAppState((draft) => {
       draft.siteId = sites[0]?.id;
     });
@@ -56,9 +70,31 @@ export const Home = () => {
         </Select>
         <div className="grow"></div>
         <LookbackChooser />
-        <Button variant="ghost" size="icon">
-          <CogIcon />
-        </Button>
+        <Sheet>
+          <SheetTrigger>
+            <Button variant="ghost" size="icon">
+              <CogIcon />
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="w-xl sm:max-w-xl">
+            <SheetHeader>
+              <SheetTitle>Settings</SheetTitle>
+            </SheetHeader>
+            {sites?.map((site) => (
+              <div>
+                <SiteForm key={site.id} site={site} />
+                <Button onClick={() => deleteSite(site.id)}>Delete site</Button>
+              </div>
+            ))}
+            <Button
+              onClick={() =>
+                createSite({ name: "Unnamed site", hostnames: [] })
+              }
+            >
+              Add site
+            </Button>
+          </SheetContent>
+        </Sheet>
       </div>
       <div>
         <Button
