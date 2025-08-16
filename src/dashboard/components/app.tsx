@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Home } from "./home";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useImmer, type ImmerHook } from "use-immer";
 import type { SiteId } from "@/sites/schema";
 
@@ -29,11 +29,22 @@ export const useAppState = () => {
   return useContext(AppStateContext);
 };
 
+const appStateKey = "nanolytics:app_state";
+
 export const App = () => {
-  const state = useImmer(defaultState);
+  const existingState = window.localStorage.getItem(appStateKey);
+  const [state, setState] = useImmer<AppState>(
+    existingState ? JSON.parse(existingState) : defaultState
+  );
+
+  useEffect(() => {
+    if (state) {
+      window.localStorage.setItem(appStateKey, JSON.stringify(state));
+    }
+  }, [state]);
   return (
     <QueryClientProvider client={queryClient}>
-      <AppStateContext.Provider value={state}>
+      <AppStateContext.Provider value={[state, setState]}>
         <Home />
       </AppStateContext.Provider>
     </QueryClientProvider>
