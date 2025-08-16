@@ -3,6 +3,7 @@ import z from "zod/v4";
 
 export const siteSchema = z.object({
   id: z.uuid(),
+  name: z.string().max(32),
   hostnames: z.preprocess(fromJSONString, z.array(z.string())),
 });
 
