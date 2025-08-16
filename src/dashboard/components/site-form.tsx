@@ -1,19 +1,17 @@
+import { type Site, siteSchemaClient } from "@/sites/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useSites, useUpdateSite } from "../hooks";
+import { useUpdateSite } from "../hooks";
+import { Button } from "./ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "./ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
-import { type Site, siteSchemaClient } from "@/sites/schema";
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
 
 export const SiteForm = ({ site }: { site: Site }) => {
   const form = useForm<Site>({
@@ -60,7 +58,9 @@ export const SiteForm = ({ site }: { site: Site }) => {
                           <Input placeholder="example.com" {...subField} />
                           <Button
                             onClick={() => {
-                              field.onChange(field.value.toSpliced(index, 1));
+                              field.onChange(
+                                form.getValues(`hostnames`).toSpliced(index, 1)
+                              );
                             }}
                           >
                             X
@@ -72,7 +72,11 @@ export const SiteForm = ({ site }: { site: Site }) => {
                   )}
                 />
               ))}
-              <Button onClick={() => field.onChange([...field.value, ""])}>
+              <Button
+                onClick={() =>
+                  field.onChange([...form.getValues(`hostnames`), ""])
+                }
+              >
                 +
               </Button>
             </>
