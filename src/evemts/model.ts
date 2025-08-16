@@ -14,12 +14,14 @@ import {
 
 export const tableName = "events";
 
-export function getAllEvents(lookback: number): UserEvent[] {
+export function getAllEvents(siteId: string, lookback: number): UserEvent[] {
   const startTime = new Date();
   startTime.setDate(startTime.getDate() - lookback);
   return db
-    .query(`SELECT * FROM ${tableName} WHERE start_time > :start_time`)
-    .all({ start_time: startTime.getTime() })
+    .query(
+      `SELECT * FROM ${tableName} WHERE site_id = :site_id AND start_time > :start_time`
+    )
+    .all({ site_id: siteId, start_time: startTime.getTime() })
     .map((v) => eventSchema.parse(v));
 }
 

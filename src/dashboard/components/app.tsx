@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Home } from "./home";
 import { createContext, useContext } from "react";
 import { useImmer, type ImmerHook } from "use-immer";
+import type { SiteId } from "@/sites/schema";
 
 export const queryClient = new QueryClient();
 
@@ -10,11 +11,13 @@ export type AggregationType = "visitors" | "visits";
 export interface AppState {
   lookback: number;
   aggregationType: AggregationType;
+  siteId: SiteId | undefined;
 }
 
 const defaultState: AppState = {
   lookback: 7,
   aggregationType: "visitors",
+  siteId: undefined,
 };
 
 const AppStateContext = createContext<ImmerHook<AppState>>([

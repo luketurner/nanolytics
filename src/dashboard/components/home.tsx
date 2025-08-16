@@ -1,12 +1,22 @@
-import { useEvents } from "../hooks";
+import { CogIcon } from "lucide-react";
+import { useEvents, useSites } from "../hooks";
 import { useAppState, type AggregationType } from "./app";
 import { LookbackChooser } from "./lookback-chooser";
 import { PageTable } from "./page-table";
 import { Button } from "./ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export const Home = () => {
   const [appState, setAppState] = useAppState();
   const { data: events } = useEvents();
+  const { data: sites } = useSites();
+
   const numVisitors = events?.reduce((visitors, event) => {
     visitors.add(event.user_id);
     return visitors;
@@ -17,9 +27,39 @@ export const Home = () => {
       draft.aggregationType = newType;
     });
   };
+
+  if (sites && sites.length > 0 && !appState.siteId) {
+    setAppState((draft) => {
+      draft.siteId = sites[0]?.id;
+    });
+  }
+
   return (
-    <>
-      <LookbackChooser />
+    <div className="max-w-5xl m-auto mt-4 mb-4">
+      <div className="flex gap-2 content-baseline mb-4">
+        <Select
+          value={appState.siteId}
+          onValueChange={(newId) =>
+            setAppState((draft) => {
+              draft.siteId = newId;
+            })
+          }
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Site name" />
+          </SelectTrigger>
+          <SelectContent>
+            {sites?.map((site) => (
+              <SelectItem value={site.id}>{site.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="grow"></div>
+        <LookbackChooser />
+        <Button variant="ghost" size="icon">
+          <CogIcon />
+        </Button>
+      </div>
       <div>
         <Button
           variant={
@@ -39,6 +79,6 @@ export const Home = () => {
         </Button>
       </div>
       <PageTable />
-    </>
+    </div>
   );
 };

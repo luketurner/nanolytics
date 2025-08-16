@@ -13,10 +13,12 @@ export interface Event {
 export const useEvents = () => {
   const [appState] = useAppState();
   return useQuery({
-    queryKey: ["events", appState.lookback],
+    queryKey: ["events", appState.siteId, appState.lookback],
     queryFn: async (): Promise<Event[]> => {
       return await (
-        await fetch(`/api/events?lookback=${appState.lookback}`)
+        await fetch(
+          `/api/events?siteId=${appState.siteId}&lookback=${appState.lookback}`
+        )
       ).json();
     },
   });

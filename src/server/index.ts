@@ -36,9 +36,12 @@ export function startServer() {
       "/api/events": {
         GET: (req: Bun.BunRequest<"/api/events">) => {
           const queryParams = new URLSearchParams(new URL(req.url).search);
-          return Response.json(
-            getAllEvents(parseInt(queryParams.get("lookback") ?? "7", 10))
-          );
+          const siteId = queryParams.get("siteId");
+          if (!siteId) {
+            return Response.json([]);
+          }
+          const lookback = parseInt(queryParams.get("lookback") ?? "7", 10);
+          return Response.json(getAllEvents(siteId, lookback));
         },
       },
       "/api/event/:id": {
