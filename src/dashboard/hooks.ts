@@ -60,12 +60,13 @@ export const useUpdateSite = () => {
 export const useCreateSite = () => {
   const queryClient = useQueryClient();
   return useCallback(
-    async (data: Partial<Omit<Site, "id">>) => {
-      await fetch(`/api/sites`, {
+    async (data: Partial<Omit<Site, "id">>): Promise<Site> => {
+      const newSite = await fetch(`/api/sites`, {
         body: JSON.stringify(data),
         method: "POST",
       });
       queryClient.invalidateQueries({ queryKey: ["sites"] });
+      return await newSite.json();
     },
     [queryClient]
   );
