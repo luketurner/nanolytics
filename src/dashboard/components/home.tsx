@@ -1,5 +1,5 @@
 import { CogIcon } from "lucide-react";
-import { useCreateSite, useDeleteSite, useEvents, useSites } from "../hooks";
+import { useEvents, useSites } from "../hooks";
 import { useAppState, type AggregationType } from "./app";
 import { LookbackChooser } from "./lookback-chooser";
 import { PageTable } from "./page-table";
@@ -18,14 +18,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "./ui/sheet";
-import { SiteForm } from "./site-form";
+import { Settings } from "./settings";
 
 export const Home = () => {
   const [appState, setAppState] = useAppState();
   const { data: events } = useEvents();
   const { data: sites } = useSites();
-  const deleteSite = useDeleteSite();
-  const createSite = useCreateSite();
 
   const numVisitors = events?.reduce((visitors, event) => {
     visitors.add(event.user_id);
@@ -80,19 +78,7 @@ export const Home = () => {
             <SheetHeader>
               <SheetTitle>Settings</SheetTitle>
             </SheetHeader>
-            {sites?.map((site) => (
-              <div>
-                <SiteForm key={site.id} site={site} />
-                <Button onClick={() => deleteSite(site.id)}>Delete site</Button>
-              </div>
-            ))}
-            <Button
-              onClick={() =>
-                createSite({ name: "Unnamed site", hostnames: [] })
-              }
-            >
-              Add site
-            </Button>
+            <Settings />
           </SheetContent>
         </Sheet>
       </div>
