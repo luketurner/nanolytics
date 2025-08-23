@@ -19,22 +19,11 @@ import {
   SheetTrigger,
 } from "./ui/sheet";
 import { Settings } from "./settings";
+import { SiteMetrics } from "./site-metrics";
 
 export const Home = () => {
-  const [appState, setAppState] = useAppState();
-  const { data: events } = useEvents();
   const { data: sites } = useSites();
-
-  const numVisitors = events?.reduce((visitors, event) => {
-    visitors.add(event.user_id);
-    return visitors;
-  }, new Set()).size;
-  const numVisits = events?.length;
-  const changeAggregationType = (newType: AggregationType) => {
-    setAppState((draft) => {
-      draft.aggregationType = newType;
-    });
-  };
+  const [appState, setAppState] = useAppState();
 
   if (
     sites &&
@@ -46,10 +35,17 @@ export const Home = () => {
     });
   }
 
+  if (!sites?.length && appState.siteId) {
+    setAppState((draft) => {
+      draft.siteId = undefined;
+    });
+  }
+
   return (
     <div className="max-w-5xl m-auto mt-4 mb-4">
       <div className="flex gap-2 content-baseline mb-4">
         <Select
+          disabled={!sites?.length}
           value={appState.siteId}
           onValueChange={(newId) =>
             setAppState((draft) => {
@@ -82,25 +78,33 @@ export const Home = () => {
           </SheetContent>
         </Sheet>
       </div>
-      <div>
-        <Button
-          variant={
-            appState.aggregationType === "visitors" ? "default" : "secondary"
-          }
-          onClick={() => changeAggregationType("visitors")}
-        >
-          Visitors: {numVisitors}
-        </Button>
-        <Button
-          variant={
-            appState.aggregationType === "visits" ? "default" : "secondary"
-          }
-          onClick={() => changeAggregationType("visits")}
-        >
-          Visits: {numVisits}
-        </Button>
-      </div>
-      <PageTable />
+      {appState.siteId ? (
+        <SiteMetrics />
+      ) : (
+        <div className="prose lg:prose-xl m-auto mt-8">
+          <p>
+            Welcome to nanolytics. You don't have any sites configured yet. To
+            get started:
+          </p>
+          <ol>
+            <li>
+              <div className="flex flex-row items-center">
+                Click the
+                <CogIcon className="inline mx-2" />
+                in the top right.
+              </div>
+            </li>
+            <li>
+              Click <strong>Create new site</strong>.
+            </li>
+            <li>
+              Add one or more <strong>Hostnames</strong> to your site. Metrics
+              will only be associated with your site if they match the site's
+              hostname(s).
+            </li>
+          </ol>
+        </div>
+      )}
     </div>
   );
 };
