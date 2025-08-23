@@ -66,7 +66,7 @@ export const Home = () => {
         <LookbackChooser />
         <Sheet>
           <SheetTrigger>
-            <Button variant="ghost" size="icon">
+            <Button variant="secondary" size="icon">
               <CogIcon />
             </Button>
           </SheetTrigger>
