@@ -19,4 +19,7 @@ bun run demo
 
 # build single-file executable
 bun run build
+
+# Single development command
+weave --- bun run dev --- bun run build:tracker:dev --- bun run demo
 ```
