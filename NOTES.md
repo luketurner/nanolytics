@@ -18,6 +18,7 @@
 - [x] Demo server improvements
 - [x] Track additional user data
 - [ ] DB import/export/download
+- [ ] Cascade delete events when sites are deleted
 
 # What we want in the dashboard
 
