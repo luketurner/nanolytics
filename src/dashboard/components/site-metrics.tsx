@@ -3,6 +3,7 @@ import { useAppState, type AggregationType } from "./app";
 import { BigLineChart } from "./big-line-chart";
 import { PageTable } from "./page-table";
 import { Button } from "./ui/button";
+import { Separator } from "./ui/separator";
 
 export const SiteMetrics = () => {
   const [appState, setAppState] = useAppState();
@@ -21,28 +22,32 @@ export const SiteMetrics = () => {
 
   return (
     <>
-      <div className="flex flex-row gap-2 my-2">
+      <div className="flex flex-row gap-2 my-2 mx-2 h-10">
         <Button
           variant={
-            appState.aggregationType === "visitors" ? "default" : "secondary"
+            appState.aggregationType === "visitors" ? "default" : "ghost"
           }
           size="lg"
           onClick={() => changeAggregationType("visitors")}
+          className="rounded-none"
         >
-          Visitors: {numVisitors}
+          {numVisitors} Visitors
         </Button>
+        <Separator orientation="vertical" />
         <Button
-          variant={
-            appState.aggregationType === "visits" ? "default" : "secondary"
-          }
+          variant={appState.aggregationType === "visits" ? "default" : "ghost"}
           onClick={() => changeAggregationType("visits")}
           size="lg"
+          className="rounded-none"
         >
-          Visits: {numVisits}
+          {numVisits} Visits
         </Button>
       </div>
+      <Separator className="my-2" />
       <BigLineChart />
-      <PageTable />
+      <div className="flex flex-row flex-wrap">
+        <PageTable />
+      </div>
     </>
   );
 };

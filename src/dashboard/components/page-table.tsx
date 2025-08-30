@@ -81,7 +81,7 @@ export const PageTable = () => {
   });
 
   return (
-    <div className="w-xl">
+    <div className="w-1/2 p-2" style={{ boxSizing: "border-box" }}>
       <HorizontalBarChart
         data={pagesForChart}
         title="Pages"

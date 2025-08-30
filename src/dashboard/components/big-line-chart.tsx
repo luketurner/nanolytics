@@ -1,4 +1,4 @@
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useEvents } from "../hooks";
 import { useAppState } from "./app";
 import {
@@ -60,8 +60,9 @@ export const BigLineChart = () => {
         accessibilityLayer
         data={chartData}
         margin={{
-          left: 12,
           right: 12,
+          top: 12,
+          bottom: 12,
         }}
       >
         <CartesianGrid vertical={false} />
@@ -77,6 +78,12 @@ export const BigLineChart = () => {
               day: "2-digit",
             })
           }
+        />
+        <YAxis
+          dataKey="count"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
         />
         <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
         <defs>

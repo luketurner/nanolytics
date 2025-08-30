@@ -7,9 +7,9 @@ import {
 } from "@/dashboard/components/ui/card";
 import {
   type ChartConfig,
-  ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  FixedHeightChartContainer,
 } from "@/dashboard/components/ui/chart";
 
 const chartConfig = {
@@ -42,7 +42,10 @@ export function HorizontalBarChart<DataType extends object>({
         {/* <CardDescription>January - June 2024</CardDescription> */}
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <FixedHeightChartContainer
+          height={data.length * 36 + 4}
+          config={chartConfig}
+        >
           <BarChart
             accessibilityLayer
             data={data}
@@ -52,7 +55,6 @@ export function HorizontalBarChart<DataType extends object>({
             }}
             barSize={32}
             barGap={4}
-            height={100}
           >
             {/* <CartesianGrid horizontal={false} /> */}
             <YAxis
@@ -91,7 +93,7 @@ export function HorizontalBarChart<DataType extends object>({
               />
             </Bar>
           </BarChart>
-        </ChartContainer>
+        </FixedHeightChartContainer>
       </CardContent>
       {/* <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 leading-none font-medium">
