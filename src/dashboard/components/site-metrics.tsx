@@ -1,7 +1,12 @@
 import { useEvents } from "../hooks";
 import { useAppState, type AggregationType } from "./app";
 import { BigLineChart } from "./big-line-chart";
+import { BrowserTable } from "./browser-table";
+import { DeviceTypeTable } from "./device-type-table";
+import { HostnameTable } from "./hostname-table";
+import { OSTable } from "./os-table";
 import { PageTable } from "./page-table";
+import { ReferrerTable } from "./referrer-table";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 
@@ -47,6 +52,11 @@ export const SiteMetrics = () => {
       <BigLineChart />
       <div className="flex flex-row flex-wrap">
         <PageTable />
+        <ReferrerTable />
+        <HostnameTable />
+        <DeviceTypeTable />
+        <BrowserTable />
+        <OSTable />
       </div>
     </>
   );
