@@ -16,7 +16,7 @@ export const useEvents = () => {
     queryFn: async (): Promise<UserEvent[]> => {
       return await (
         await fetch(
-          `/api/events?siteId=${appState.siteId}&lookback=${appState.lookback}`
+          `/api/events?siteId=${appState.siteId}&lookback=${appState.lookback}`,
         )
       ).json();
     },
@@ -51,7 +51,7 @@ export const useUpdateSite = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["sites"] });
     },
-    [queryClient]
+    [queryClient],
   );
 };
 
@@ -66,7 +66,7 @@ export const useCreateSite = () => {
       queryClient.invalidateQueries({ queryKey: ["sites"] });
       return await newSite.json();
     },
-    [queryClient]
+    [queryClient],
   );
 };
 
@@ -79,20 +79,26 @@ export const useDeleteSite = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["sites"] });
     },
-    [queryClient]
+    [queryClient],
   );
 };
 
 export interface AggregatedEvents {
-  url: Record<string, number>;
-  referrer: Record<string, number>;
-  hostname: Record<string, number>;
-  device_type: Partial<Record<DeviceType, number>>;
-  operating_system: Partial<Record<OperatingSystem, number>>;
-  browser: Partial<Record<BrowserType, number>>;
+  url: Record<AggregationKeyValue<string>, number>;
+  referrer: Record<AggregationKeyValue<string>, number>;
+  hostname: Record<AggregationKeyValue<string>, number>;
+  device_type: Partial<Record<AggregationKeyValue<DeviceType>, number>>;
+  operating_system: Partial<
+    Record<AggregationKeyValue<OperatingSystem>, number>
+  >;
+  browser: Partial<Record<AggregationKeyValue<BrowserType>, number>>;
 }
 
+type AggregationKeyValue<T> = T | typeof Total | typeof None;
 type AggregationKey = keyof AggregatedEvents;
+
+export const Total = Symbol();
+export const None = Symbol();
 
 // TODO -- also calculate view time
 export const useAggregatedEvents = (): AggregatedEvents => {
@@ -102,43 +108,63 @@ export const useAggregatedEvents = (): AggregatedEvents => {
 
   const aggregatedEvents = useMemo(() => {
     const agg: AggregatedEvents = {
-      url: {},
-      referrer: {},
-      hostname: {},
-      device_type: {},
-      operating_system: {},
-      browser: {},
+      url: { [Total]: 0, [None]: 0 },
+      referrer: { [Total]: 0, [None]: 0 },
+      hostname: { [Total]: 0, [None]: 0 },
+      device_type: { [Total]: 0, [None]: 0 },
+      operating_system: { [Total]: 0, [None]: 0 },
+      browser: { [Total]: 0, [None]: 0 },
     };
 
     if (aggregationType === "visits") {
       for (const event of events ?? []) {
         for (const key of Object.keys(agg) as AggregationKey[]) {
-          inc(agg[key], event[key], 1);
+          if (event[key]) {
+            inc(agg[key], event[key], 1);
+          } else {
+            agg[key][None]! += 1;
+          }
+          agg[key][Total]! += 1;
         }
       }
     } else {
-      const sets: Record<AggregationKey, Record<string, Set<UserEventId>>> = {
-        url: {},
-        referrer: {},
-        hostname: {},
-        device_type: {},
-        operating_system: {},
-        browser: {},
+      const sets: Record<
+        AggregationKey,
+        Record<AggregationKeyValue<string>, Set<UserEventId>>
+      > = {
+        url: { [Total]: new Set(), [None]: new Set() },
+        referrer: { [Total]: new Set(), [None]: new Set() },
+        hostname: { [Total]: new Set(), [None]: new Set() },
+        device_type: { [Total]: new Set(), [None]: new Set() },
+        operating_system: { [Total]: new Set(), [None]: new Set() },
+        browser: { [Total]: new Set(), [None]: new Set() },
       };
 
       for (const event of events ?? []) {
         for (const key of Object.keys(agg) as AggregationKey[]) {
           const value = event[key];
-          if (!value) continue;
-          const set = sets[key][value];
-          if (set) {
-            if (!set.has(event.user_id)) {
-              set.add(event.user_id);
+          const totalSet = sets[key][Total];
+          if (value) {
+            const set = sets[key][value];
+            if (set) {
+              if (!set.has(event.user_id)) {
+                set.add(event.user_id);
+                inc(agg[key], value, 1);
+              }
+            } else {
+              sets[key][value] = new Set([event.user_id]);
               inc(agg[key], value, 1);
             }
           } else {
-            sets[key][value] = new Set([event.user_id]);
-            inc(agg[key], value, 1);
+            const noneSet = sets[key][None];
+            if (!noneSet.has(event.user_id)) {
+              noneSet.add(event.user_id);
+              agg[key][None]! += 1;
+            }
+          }
+          if (!totalSet.has(event.user_id)) {
+            totalSet.add(event.user_id);
+            agg[key][Total]! += 1;
           }
         }
       }
@@ -150,7 +176,9 @@ export const useAggregatedEvents = (): AggregatedEvents => {
   return aggregatedEvents;
 };
 
-export function useChartData(data: Record<string, number>) {
+export function useChartData(
+  data: Record<AggregationKeyValue<string>, number>,
+) {
   return useMemo(() => {
     const chartData = Object.entries(data ?? {})
       .map(([key, count]) => ({
@@ -159,22 +187,18 @@ export function useChartData(data: Record<string, number>) {
       }))
       .toSorted((a, b) => b.count - a.count);
 
-    const totalData = chartData.reduce<{
-      count: number;
-    }>(
-      (data, datum) => {
-        data.count += datum.count;
-        return data;
-      },
-      {
-        count: 0,
-      }
-    );
-
     chartData.unshift({
       key: "Total",
-      count: totalData.count,
+      count: data[Total],
     });
+
+    if (data[None]) {
+      chartData.push({
+        key: "None",
+        count: data[None],
+      });
+    }
+
     return chartData;
   }, [data]);
 }
@@ -182,7 +206,7 @@ export function useChartData(data: Record<string, number>) {
 function inc(
   obj: { [key: string]: number | undefined },
   key: string | null | undefined,
-  num: number
+  num: number,
 ) {
   if (!key) return;
   if (!obj[key]) obj[key] = 0;
