@@ -8,7 +8,7 @@ import {
 import {
   type ChartConfig,
   ChartTooltip,
-  ChartTooltipContent,
+  ChartTooltipContentExtra,
   FixedHeightChartContainer,
 } from "@/dashboard/components/ui/chart";
 
@@ -69,7 +69,12 @@ export function HorizontalBarChart<DataType extends object>({
             <XAxis dataKey={xAxisKey} type="number" hide />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
+              content={
+                <ChartTooltipContentExtra
+                  indicator="line"
+                  extraKeys={[{ key: "avgViewTime", label: "avg time" }]}
+                />
+              }
             />
             <Bar
               dataKey={xAxisKey}

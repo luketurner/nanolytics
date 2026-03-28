@@ -84,21 +84,165 @@ export const useDeleteSite = () => {
 };
 
 export interface AggregatedEvents {
-  url: Record<AggregationKeyValue<string>, number>;
-  referrer: Record<AggregationKeyValue<string>, number>;
-  hostname: Record<AggregationKeyValue<string>, number>;
-  device_type: Partial<Record<AggregationKeyValue<DeviceType>, number>>;
-  operating_system: Partial<
-    Record<AggregationKeyValue<OperatingSystem>, number>
+  url: Record<AggregationKeyValue<string>, AggregationData>;
+  referrer: Record<AggregationKeyValue<string>, AggregationData>;
+  hostname: Record<AggregationKeyValue<string>, AggregationData>;
+  device_type: Partial<
+    Record<AggregationKeyValue<DeviceType>, AggregationData>
   >;
-  browser: Partial<Record<AggregationKeyValue<BrowserType>, number>>;
+  operating_system: Partial<
+    Record<AggregationKeyValue<OperatingSystem>, AggregationData>
+  >;
+  browser: Partial<Record<AggregationKeyValue<BrowserType>, AggregationData>>;
 }
 
 type AggregationKeyValue<T> = T | typeof Total | typeof None;
 type AggregationKey = keyof AggregatedEvents;
+interface AggregationData {
+  count: number;
+  avgViewTime: number;
+}
 
 export const Total = Symbol();
 export const None = Symbol();
+
+function eventViewTime(event: UserEvent): number | null {
+  if (!event.end_time) return null;
+  return event.end_time - event.start_time;
+}
+
+function initialAggregatedEvents(): AggregatedEvents {
+  return {
+    url: {
+      [Total]: { count: 0, avgViewTime: 0 },
+      [None]: { count: 0, avgViewTime: 0 },
+    },
+    referrer: {
+      [Total]: { count: 0, avgViewTime: 0 },
+      [None]: { count: 0, avgViewTime: 0 },
+    },
+    hostname: {
+      [Total]: { count: 0, avgViewTime: 0 },
+      [None]: { count: 0, avgViewTime: 0 },
+    },
+    device_type: {
+      [Total]: { count: 0, avgViewTime: 0 },
+      [None]: { count: 0, avgViewTime: 0 },
+    },
+    operating_system: {
+      [Total]: { count: 0, avgViewTime: 0 },
+      [None]: { count: 0, avgViewTime: 0 },
+    },
+    browser: {
+      [Total]: { count: 0, avgViewTime: 0 },
+      [None]: { count: 0, avgViewTime: 0 },
+    },
+  };
+}
+
+function aggrevateEventsByVisit(events: UserEvent[] | undefined) {
+  const agg = initialAggregatedEvents();
+  for (const event of events ?? []) {
+    const viewTime = eventViewTime(event);
+    for (const key of Object.keys(agg) as AggregationKey[]) {
+      if (event[key]) {
+        inc(agg[key], event[key], "count", 1);
+        if (typeof viewTime === "number") {
+          inc(agg[key], event[key], "avgViewTime", viewTime);
+        }
+      } else {
+        agg[key][None]!.count += 1;
+        if (typeof viewTime === "number") {
+          agg[key][None]!.avgViewTime += viewTime;
+        }
+      }
+      agg[key][Total]!.count += 1;
+      if (typeof viewTime === "number") {
+        agg[key][Total]!.avgViewTime += viewTime;
+      }
+    }
+  }
+
+  for (const key of Object.keys(agg) as AggregationKey[]) {
+    const buckets = agg[key];
+    for (const bucket of Object.values(buckets)) {
+      bucket.avgViewTime /= bucket.count;
+    }
+    buckets[Total]!.avgViewTime /= buckets[Total]!.count;
+    if (buckets[None]!.count) {
+      buckets[None]!.avgViewTime /= buckets[None]!.count;
+    }
+  }
+  return agg;
+}
+
+function aggrevateEventsByVisitor(events: UserEvent[] | undefined) {
+  const agg = initialAggregatedEvents();
+  const sets: Record<
+    AggregationKey,
+    Record<AggregationKeyValue<string>, Set<UserEventId>>
+  > = {
+    url: { [Total]: new Set(), [None]: new Set() },
+    referrer: { [Total]: new Set(), [None]: new Set() },
+    hostname: { [Total]: new Set(), [None]: new Set() },
+    device_type: { [Total]: new Set(), [None]: new Set() },
+    operating_system: { [Total]: new Set(), [None]: new Set() },
+    browser: { [Total]: new Set(), [None]: new Set() },
+  };
+
+  for (const event of events ?? []) {
+    const viewTime = eventViewTime(event);
+    for (const key of Object.keys(agg) as AggregationKey[]) {
+      const value = event[key];
+      const totalSet = sets[key][Total];
+      if (value) {
+        if (typeof viewTime === "number") {
+          inc(agg[key], value, "avgViewTime", viewTime);
+        }
+        const set = sets[key][value];
+        if (set) {
+          if (!set.has(event.user_id)) {
+            set.add(event.user_id);
+            inc(agg[key], value, "count", 1);
+          }
+        } else {
+          sets[key][value] = new Set([event.user_id]);
+          inc(agg[key], value, "count", 1);
+        }
+      } else {
+        if (typeof viewTime === "number") {
+          agg[key][None]!.avgViewTime += viewTime;
+        }
+        const noneSet = sets[key][None];
+        if (!noneSet.has(event.user_id)) {
+          noneSet.add(event.user_id);
+          agg[key][None]!.count += 1;
+        }
+      }
+      if (typeof viewTime === "number") {
+        agg[key][Total]!.avgViewTime += viewTime;
+      }
+      if (!totalSet.has(event.user_id)) {
+        totalSet.add(event.user_id);
+        agg[key][Total]!.count += 1;
+      }
+    }
+  }
+
+  const aggByVisit = aggrevateEventsByVisit(events);
+
+  for (const key of Object.keys(agg) as AggregationKey[]) {
+    const buckets = agg[key];
+    for (const [bucketKey, bucket] of Object.entries(buckets)) {
+      bucket.avgViewTime /= aggByVisit[key][bucketKey as any].count;
+    }
+    buckets[Total]!.avgViewTime /= aggByVisit[key][Total]!.count;
+    if (buckets[None]!.count) {
+      buckets[None]!.avgViewTime /= aggByVisit[key][None]!.count;
+    }
+  }
+  return agg;
+}
 
 // TODO -- also calculate view time
 export const useAggregatedEvents = (): AggregatedEvents => {
@@ -107,67 +251,12 @@ export const useAggregatedEvents = (): AggregatedEvents => {
   const aggregationType = appState.aggregationType;
 
   const aggregatedEvents = useMemo(() => {
-    const agg: AggregatedEvents = {
-      url: { [Total]: 0, [None]: 0 },
-      referrer: { [Total]: 0, [None]: 0 },
-      hostname: { [Total]: 0, [None]: 0 },
-      device_type: { [Total]: 0, [None]: 0 },
-      operating_system: { [Total]: 0, [None]: 0 },
-      browser: { [Total]: 0, [None]: 0 },
-    };
+    const agg: AggregatedEvents = initialAggregatedEvents();
 
     if (aggregationType === "visits") {
-      for (const event of events ?? []) {
-        for (const key of Object.keys(agg) as AggregationKey[]) {
-          if (event[key]) {
-            inc(agg[key], event[key], 1);
-          } else {
-            agg[key][None]! += 1;
-          }
-          agg[key][Total]! += 1;
-        }
-      }
+      return aggrevateEventsByVisit(events);
     } else {
-      const sets: Record<
-        AggregationKey,
-        Record<AggregationKeyValue<string>, Set<UserEventId>>
-      > = {
-        url: { [Total]: new Set(), [None]: new Set() },
-        referrer: { [Total]: new Set(), [None]: new Set() },
-        hostname: { [Total]: new Set(), [None]: new Set() },
-        device_type: { [Total]: new Set(), [None]: new Set() },
-        operating_system: { [Total]: new Set(), [None]: new Set() },
-        browser: { [Total]: new Set(), [None]: new Set() },
-      };
-
-      for (const event of events ?? []) {
-        for (const key of Object.keys(agg) as AggregationKey[]) {
-          const value = event[key];
-          const totalSet = sets[key][Total];
-          if (value) {
-            const set = sets[key][value];
-            if (set) {
-              if (!set.has(event.user_id)) {
-                set.add(event.user_id);
-                inc(agg[key], value, 1);
-              }
-            } else {
-              sets[key][value] = new Set([event.user_id]);
-              inc(agg[key], value, 1);
-            }
-          } else {
-            const noneSet = sets[key][None];
-            if (!noneSet.has(event.user_id)) {
-              noneSet.add(event.user_id);
-              agg[key][None]! += 1;
-            }
-          }
-          if (!totalSet.has(event.user_id)) {
-            totalSet.add(event.user_id);
-            agg[key][Total]! += 1;
-          }
-        }
-      }
+      return aggrevateEventsByVisitor(events);
     }
 
     return agg;
@@ -177,25 +266,28 @@ export const useAggregatedEvents = (): AggregatedEvents => {
 };
 
 export function useChartData(
-  data: Record<AggregationKeyValue<string>, number>,
+  data: Record<AggregationKeyValue<string>, AggregationData>,
 ) {
   return useMemo(() => {
     const chartData = Object.entries(data ?? {})
-      .map(([key, count]) => ({
+      .map(([key, { count, avgViewTime }]) => ({
         key,
         count,
+        avgViewTime: `${(avgViewTime / 1000).toFixed(1)}s`,
       }))
       .toSorted((a, b) => b.count - a.count);
 
     chartData.unshift({
       key: "Total",
-      count: data[Total],
+      count: data[Total].count,
+      avgViewTime: `${(data[Total].avgViewTime / 1000).toFixed(1)}s`,
     });
 
-    if (data[None]) {
+    if (data[None].count) {
       chartData.push({
         key: "None",
-        count: data[None],
+        count: data[None].count,
+        avgViewTime: `${(data[None].avgViewTime / 1000).toFixed(1)}s`,
       });
     }
 
@@ -204,11 +296,12 @@ export function useChartData(
 }
 
 function inc(
-  obj: { [key: string]: number | undefined },
+  obj: { [key: string]: AggregationData | undefined },
   key: string | null | undefined,
+  innerKey: keyof AggregationData,
   num: number,
 ) {
   if (!key) return;
-  if (!obj[key]) obj[key] = 0;
-  obj[key] += num;
+  if (!obj[key]) obj[key] = { count: 0, avgViewTime: 0 };
+  obj[key][innerKey] += num;
 }
