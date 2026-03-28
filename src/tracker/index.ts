@@ -1,5 +1,5 @@
 const id = window.crypto.randomUUID();
-const baseUrl = "http://localhost:3000";
+const baseUrl = location.origin;
 
 navigator.sendBeacon(
   new URL("/record", baseUrl),
@@ -9,7 +9,7 @@ navigator.sendBeacon(
     start_time: Date.now(),
     end_time: null,
     referrer: document.referrer,
-  })
+  }),
 );
 
 let sent = false;
@@ -20,7 +20,7 @@ document.addEventListener("visibilitychange", () => {
       JSON.stringify({
         id,
         end_time: Date.now(),
-      })
+      }),
     );
     sent = true;
   }
