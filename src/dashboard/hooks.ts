@@ -269,19 +269,13 @@ export function useChartData(
   data: Record<AggregationKeyValue<string>, AggregationData>,
 ) {
   return useMemo(() => {
-    const chartData = Object.entries(data ?? {})
-      .map(([key, { count, avgViewTime }]) => ({
+    const chartData = Object.entries(data ?? {}).map(
+      ([key, { count, avgViewTime }]) => ({
         key,
         count,
         avgViewTime: `${(avgViewTime / 1000).toFixed(1)}s`,
-      }))
-      .toSorted((a, b) => b.count - a.count);
-
-    chartData.unshift({
-      key: "Total",
-      count: data[Total].count,
-      avgViewTime: `${(data[Total].avgViewTime / 1000).toFixed(1)}s`,
-    });
+      }),
+    );
 
     if (data[None].count) {
       chartData.push({
@@ -290,6 +284,14 @@ export function useChartData(
         avgViewTime: `${(data[None].avgViewTime / 1000).toFixed(1)}s`,
       });
     }
+
+    chartData.sort((a, b) => b.count - a.count);
+
+    chartData.unshift({
+      key: "Total",
+      count: data[Total].count,
+      avgViewTime: `${(data[Total].avgViewTime / 1000).toFixed(1)}s`,
+    });
 
     return chartData;
   }, [data]);
