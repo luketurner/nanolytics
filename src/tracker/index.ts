@@ -2,7 +2,7 @@ const id = window.crypto.randomUUID();
 const baseUrl = location.origin;
 
 navigator.sendBeacon(
-  new URL("/record", baseUrl),
+  new URL("/Zk6oRyceUNh/record", baseUrl),
   JSON.stringify({
     id,
     url: location.pathname,
@@ -16,7 +16,7 @@ let sent = false;
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden" && !sent) {
     navigator.sendBeacon(
-      new URL("/finish", baseUrl),
+      new URL("/Zk6oRyceUNh/finish", baseUrl),
       JSON.stringify({
         id,
         end_time: Date.now(),

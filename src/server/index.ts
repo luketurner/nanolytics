@@ -3,7 +3,12 @@ import { z } from "zod/v4";
 import { randomUUID } from "crypto";
 import dashboardIndex from "@/dashboard/index.html";
 import { getUserId } from "@/util/user-id";
-import { DASHBOARD_PORT, PORT } from "@/config";
+import {
+  DASHBOARD_PORT,
+  DEFAULT_TRACKER_KEY,
+  PORT,
+  TRACKER_KEY,
+} from "@/config";
 import {
   createEvent,
   getAllEvents,
@@ -77,19 +82,26 @@ export function startServer() {
   Bun.serve({
     port: PORT,
     routes: {
-      "/tracker.js": {
-        GET: () => {
-          const resp = new Response(Bun.file(tracker as string));
+      "/:key/tracker.js": {
+        GET: async (req) => {
+          if (req.params.key !== TRACKER_KEY)
+            return new Response("Not Found", { status: 404 });
+          const script = await Bun.file(tracker as string).text();
+          const resp = new Response(
+            script.replaceAll(DEFAULT_TRACKER_KEY, TRACKER_KEY),
+          );
           resp.headers.set("access-control-allow-origin", "*");
           return resp;
         },
       },
-      "/noscript.gif": {
-        GET: (req: Bun.BunRequest<"/noscript.gif">, server) => {
+      "/:key/noscript.gif": {
+        GET: (req, server) => {
+          if (req.params.key !== TRACKER_KEY)
+            return new Response("Not Found", { status: 404 });
           const address = server.requestIP(req);
           if (address) {
             const parsedUserAgent = parseUserAgent(
-              req.headers.get("user-agent") ?? ""
+              req.headers.get("user-agent") ?? "",
             );
 
             const referrer = req.headers.get("referer");
@@ -117,7 +129,7 @@ export function startServer() {
           const resp = new Response(Bun.file(noscript));
           resp.headers.set(
             "cache-control",
-            "no-cache, no-store, must-revalidate"
+            "no-cache, no-store, must-revalidate",
           );
           resp.headers.set("expires", "0");
           resp.headers.set("pragma", "no-cache");
@@ -126,15 +138,17 @@ export function startServer() {
           return resp;
         },
       },
-      "/record": {
+      "/:key/record": {
         POST: async (req, server) => {
+          if (req.params.key !== TRACKER_KEY)
+            return new Response("Not Found", { status: 404 });
           const body = recordApiSchema.parse(await req.json());
           const address = server.requestIP(req);
           if (!address) {
             return Response.error();
           }
           const parsedUserAgent = parseUserAgent(
-            req.headers.get("user-agent") ?? ""
+            req.headers.get("user-agent") ?? "",
           );
 
           const origin = req.headers.get("origin");
@@ -159,8 +173,10 @@ export function startServer() {
           return Response.json({ status: "ok" });
         },
       },
-      "/finish": {
+      "/:key/finish": {
         POST: async (req) => {
+          if (req.params.key !== TRACKER_KEY)
+            return new Response("Not Found", { status: 404 });
           const body = finishApiSchema.parse(await req.json());
           updateEvent(body.id, { end_time: body.end_time });
           return Response.json({ status: "ok" });
