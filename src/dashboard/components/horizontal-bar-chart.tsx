@@ -41,7 +41,7 @@ export function HorizontalBarChart<DataType extends object>({
         <CardTitle>{title}</CardTitle>
         {/* <CardDescription>January - June 2024</CardDescription> */}
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-h-75 overflow-y-auto">
         <FixedHeightChartContainer
           height={data.length * 36 + 4}
           config={chartConfig}
@@ -51,7 +51,7 @@ export function HorizontalBarChart<DataType extends object>({
             data={data}
             layout="vertical"
             margin={{
-              right: 16,
+              right: 40,
             }}
             barSize={32}
             barGap={4}
@@ -89,10 +89,17 @@ export function HorizontalBarChart<DataType extends object>({
                 className="fill-(--color-label)"
                 fontSize={12}
               />
+              {/* <LabelList
+                dataKey={xAxisKey}
+                position="insideRight"
+                offset={8}
+                className="fill-(--color-label)"
+                fontSize={12}
+              /> */}
               <LabelList
                 dataKey={xAxisKey}
                 position="right"
-                offset={8}
+                offset={4}
                 className="fill-foreground"
                 fontSize={12}
               />
