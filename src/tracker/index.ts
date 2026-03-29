@@ -1,5 +1,6 @@
 const id = window.crypto.randomUUID();
-const baseUrl = location.origin;
+const srcUrl = (document.currentScript as HTMLScriptElement).src;
+const baseUrl = new URL(srcUrl).origin;
 
 navigator.sendBeacon(
   new URL("/Zk6oRyceUNh/record", baseUrl),
