@@ -19,7 +19,7 @@ export function getAllEvents(siteId: string, lookback: number): UserEvent[] {
   startTime.setDate(startTime.getDate() - lookback);
   return db
     .query(
-      `SELECT * FROM ${tableName} WHERE site_id = :site_id AND start_time > :start_time`
+      `SELECT * FROM ${tableName} WHERE site_id = :site_id AND start_time > :start_time`,
     )
     .all({ site_id: siteId, start_time: startTime.getTime() })
     .map((v) => eventSchema.parse(v));
@@ -27,7 +27,7 @@ export function getAllEvents(siteId: string, lookback: number): UserEvent[] {
 
 export function getEventById(id: UserEventId): UserEvent {
   return eventSchema.parse(
-    db.query(`SELECT * FROM ${tableName} WHERE id = :id`).get({ id })
+    db.query(`SELECT * FROM ${tableName} WHERE id = :id`).get({ id }),
   );
 }
 
@@ -37,23 +37,27 @@ export function createEvent(data: UserEventInput): UserEvent {
     db
       .query(
         `INSERT INTO ${tableName} (${createKeysForObject(
-          validData
-        )}) VALUES (${createValuesForObject(validData)}) RETURNING *`
+          validData,
+        )}) VALUES (${createValuesForObject(validData)}) RETURNING *`,
       )
-      .get(validData)
+      .get(validData),
   );
+}
+
+export function clearEvents() {
+  db.run(`DELETE FROM ${tableName}`);
 }
 
 export function updateEvent(
   id: UserEventId,
-  data: Partial<UserEventInput>
+  data: Partial<UserEventInput>,
 ): UserEvent | null {
   const validData = eventSchema.partial().parse(data);
   const result = db
     .query(
       `UPDATE ${tableName} SET ${updateForObject(
-        validData
-      )} WHERE id = :id RETURNING *`
+        validData,
+      )} WHERE id = :id RETURNING *`,
     )
     .get({ ...validData, id });
   return result ? eventSchema.parse(result) : null;

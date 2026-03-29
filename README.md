@@ -20,6 +20,9 @@ bun run demo
 # build single-file executable
 bun run build
 
+# Generate test data
+bun run scripts/data.ts
+
 # Single development command
 weave --- bun run dev --- bun run build:tracker:dev --- bun run demo
 ```
