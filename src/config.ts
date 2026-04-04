@@ -8,6 +8,10 @@ export const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
 export const DEFAULT_TRACKER_KEY = "Zk6oRyceUNh";
 export const TRACKER_KEY = process.env.TRACKER_KEY || DEFAULT_TRACKER_KEY;
 
+export const ADMIN_USER = process.env.ADMIN_USER || "admin";
+export const ADMIN_PASSWORD =
+  process.env.ADMIN_PASSWORD || "SJRYENjOy7lSVml8U1hlzg";
+
 if (!TRACKER_KEY.match(/^[0-9a-zA-Z]+$/)) {
   throw new Error("Invalid TRACKER_KEY, must be alphanumeric.");
 }

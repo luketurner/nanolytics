@@ -25,6 +25,8 @@ import {
   createSite,
   deleteSite,
 } from "@/sites/model";
+import { getUserByUsernameAndPassword } from "@/auth/user";
+import { createSession } from "@/auth/session";
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -74,6 +76,22 @@ export function startServer() {
         },
         DELETE: async (req) => {
           return Response.json(deleteSite(req.params.id));
+        },
+      },
+      "/auth/login": {
+        POST: async (req: Bun.BunRequest<"/auth/login">) => {
+          const body = await req.json();
+          const user = getUserByUsernameAndPassword(
+            body?.username,
+            body?.password,
+          );
+          if (!user) {
+            return new Response("Invalid login", { status: 403 });
+          }
+          const session = createSession(user.id);
+          return Response.json({
+            token: session.token,
+          });
         },
       },
     },
