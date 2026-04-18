@@ -8,78 +8,83 @@ import type {
   OperatingSystem,
 } from "@/util/user-agent";
 import type { UserEvent, UserEventId } from "@/evemts/schema";
+import { useApi } from "./hooks/useApi";
 
 export const useEvents = () => {
   const [appState] = useAppState();
+  const api = useApi();
   return useQuery({
     queryKey: ["events", appState.siteId, appState.lookback],
     queryFn: async (): Promise<UserEvent[]> => {
-      return await (
-        await fetch(
-          `/api/events?siteId=${appState.siteId}&lookback=${appState.lookback}`,
-        )
-      ).json();
+      return await api(
+        `/api/events?siteId=${appState.siteId}&lookback=${appState.lookback}`,
+      );
     },
   });
 };
 
 export const useEvent = (id: string) => {
+  const api = useApi();
   return useQuery({
     queryKey: ["events", id],
     queryFn: async (): Promise<UserEvent> => {
-      return await (await fetch(`/api/events/${id}`)).json();
+      return await api(`/api/events/${id}`);
     },
   });
 };
 
 export const useSites = () => {
+  const api = useApi();
   return useQuery({
     queryKey: ["sites"],
     queryFn: async (): Promise<Site[]> => {
-      return await (await fetch(`/api/sites`)).json();
+      return await api(`/api/sites`);
     },
   });
 };
 
 export const useUpdateSite = () => {
   const queryClient = useQueryClient();
+  const api = useApi();
   return useCallback(
     async (id: string, data: Partial<Site>) => {
-      await fetch(`/api/sites/${id}`, {
+      await api(`/api/sites/${id}`, {
         body: JSON.stringify(data),
         method: "POST",
       });
       queryClient.invalidateQueries({ queryKey: ["sites"] });
     },
-    [queryClient],
+    [queryClient, api],
   );
 };
 
 export const useCreateSite = () => {
   const queryClient = useQueryClient();
+  const api = useApi();
   return useCallback(
     async (data: Partial<Omit<Site, "id">>): Promise<Site> => {
-      const newSite = await fetch(`/api/sites`, {
+      const newSite = await api(`/api/sites`, {
         body: JSON.stringify(data),
         method: "POST",
       });
       queryClient.invalidateQueries({ queryKey: ["sites"] });
-      return await newSite.json();
+      return newSite;
     },
-    [queryClient],
+    [queryClient, api],
   );
 };
 
 export const useDeleteSite = () => {
   const queryClient = useQueryClient();
+  const api = useApi();
   return useCallback(
     async (id: string) => {
-      await fetch(`/api/sites/${id}`, {
+      await api(`/api/sites/${id}`, {
         method: "DELETE",
       });
       queryClient.invalidateQueries({ queryKey: ["sites"] });
     },
-    [queryClient],
+    [queryClient, api],
   );
 };
 
