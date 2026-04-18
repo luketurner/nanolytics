@@ -20,6 +20,8 @@ import {
 } from "./ui/sheet";
 import { Settings } from "./settings";
 import { SiteMetrics } from "./site-metrics";
+import { Container } from "./container";
+import { Header } from "./header";
 
 export const Home = () => {
   const { data: sites } = useSites();
@@ -42,8 +44,8 @@ export const Home = () => {
   }
 
   return (
-    <div className="max-w-5xl m-auto mt-4 mb-4">
-      <div className="flex gap-2 content-baseline mb-4">
+    <Container>
+      <Header>
         <Select
           disabled={!sites?.length}
           value={appState.siteId}
@@ -77,7 +79,7 @@ export const Home = () => {
             <Settings />
           </SheetContent>
         </Sheet>
-      </div>
+      </Header>
       {appState.siteId ? (
         <SiteMetrics />
       ) : (
@@ -105,6 +107,6 @@ export const Home = () => {
           </ol>
         </div>
       )}
-    </div>
+    </Container>
   );
 };

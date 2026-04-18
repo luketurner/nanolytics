@@ -24,6 +24,9 @@ export function useApi() {
           draft.session = null;
         });
       }
+      if (!resp.ok) {
+        throw new Error(await resp.text());
+      }
       return await resp.json();
     },
     [token, setAppState],

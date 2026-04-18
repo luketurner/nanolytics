@@ -2,7 +2,11 @@ import "@/server-only";
 
 import { db } from "@/db";
 import z from "zod/v4";
-import { createKeysForObject, createValuesForObject } from "@/util/sql";
+import {
+  createKeysForObject,
+  createValuesForObject,
+  updateForObject,
+} from "@/util/sql";
 import { ADMIN_PASSWORD, ADMIN_USER } from "@/config";
 
 export const tableName = "users";
@@ -12,6 +16,8 @@ export const userSchema = z.object({
   username: z.string().min(1).max(32),
   password_hash: z.string().min(1),
 });
+
+export const passwordSchema = z.string().min(6);
 
 export type User = z.infer<typeof userSchema>;
 export type UserId = User["id"];
@@ -39,13 +45,18 @@ export async function getUserByUsernameAndPassword(
         .query(`SELECT * FROM ${tableName} WHERE username = :username`)
         .get({ username }),
     );
-  if (user && (await verifyPassword(password, user.password_hash))) {
+  if (user && (await verifyUserPassword(user, password))) {
     return user;
   }
   return null;
 }
 
+export async function verifyUserPassword(user: User, password: string) {
+  return verifyPassword(password, user.password_hash);
+}
+
 async function createUser(data: UserWithPassword): Promise<User> {
+  passwordSchema.parse(data.password);
   const validData = userSchema.parse({
     ...data,
     password_hash: await hashPassword(data.password),
@@ -71,6 +82,30 @@ export async function createAdminUser(): Promise<User> {
     username: ADMIN_USER,
     password: ADMIN_PASSWORD,
   });
+}
+
+export async function updateUser(
+  id: UserId,
+  data: Partial<UserWithPassword>,
+): Promise<User | null> {
+  passwordSchema.parse(data.password);
+  const validData = userSchema.partial().parse({
+    ...data,
+    ...(data.password
+      ? { password_hash: await hashPassword(data.password) }
+      : null),
+  });
+  const result = db
+    .query(
+      `UPDATE ${tableName} SET ${updateForObject(
+        validData,
+      )} WHERE id = :id RETURNING *`,
+    )
+    .get({
+      ...validData,
+      id,
+    });
+  return result ? userSchema.parse(result) : null;
 }
 
 export function createUsersTable() {

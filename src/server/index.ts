@@ -20,7 +20,12 @@ import {
   createSite,
   deleteSite,
 } from "@/sites/model";
-import { getUserByUsernameAndPassword } from "@/auth/user";
+import {
+  getUser,
+  getUserByUsernameAndPassword,
+  updateUser,
+  verifyUserPassword,
+} from "@/auth/user";
 import { checkSession, createSession } from "@/auth/session";
 
 const recordApiSchema = z.object({
@@ -79,6 +84,32 @@ export function startServer() {
         DELETE: async (req) => {
           requireUserSession(req);
           return Response.json(deleteSite(req.params.id));
+        },
+      },
+      "/api/user/changepassword": {
+        POST: async (req) => {
+          const { user_id } = requireUserSession(req);
+          const user = getUser(user_id);
+          const body = await req.json();
+          const isValid =
+            user && (await verifyUserPassword(user, body?.existingPassword));
+          if (!isValid) {
+            throw new Response("Current password does not match", {
+              status: 400,
+            });
+          }
+
+          try {
+            return Response.json(
+              await updateUser(user.id, {
+                password: body?.newPassword,
+              }),
+            );
+          } catch (e) {
+            throw new Response("New password does not meet criteria", {
+              status: 400,
+            });
+          }
         },
       },
       "/auth/login": {
@@ -212,9 +243,11 @@ export function startServer() {
 }
 
 function requireUserSession<T extends string>(req: Bun.BunRequest<T>) {
-  if (
-    !checkSession(req.headers.get("authorization")?.replace(/^Bearer /, ""))
-  ) {
+  const session = checkSession(
+    req.headers.get("authorization")?.replace(/^Bearer /, ""),
+  );
+  if (!session) {
     throw new Response("Invalid session", { status: 403 });
   }
+  return session;
 }

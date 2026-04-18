@@ -88,6 +88,23 @@ export const useDeleteSite = () => {
   );
 };
 
+export const useUpdatePassword = () => {
+  const queryClient = useQueryClient();
+  const api = useApi();
+  return useCallback(
+    async (existingPassword: string, newPassword: string) => {
+      await api(`/api/user/changepassword`, {
+        method: "POST",
+        body: JSON.stringify({
+          existingPassword,
+          newPassword,
+        }),
+      });
+    },
+    [queryClient, api],
+  );
+};
+
 export interface AggregatedEvents {
   url: Record<AggregationKeyValue<string>, AggregationData>;
   referrer: Record<AggregationKeyValue<string>, AggregationData>;

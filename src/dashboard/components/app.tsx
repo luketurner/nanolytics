@@ -4,6 +4,7 @@ import { useImmer, type ImmerHook } from "use-immer";
 import type { SiteId } from "@/sites/schema";
 import type { MaybeSession } from "../hooks/useSession";
 import { Router } from "./router";
+import { Toaster } from "./ui/sonner";
 
 export const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ export const App = () => {
     <QueryClientProvider client={queryClient}>
       <AppStateContext.Provider value={[state, setState]}>
         <Router />
+        <Toaster position="top-center" />
       </AppStateContext.Provider>
     </QueryClientProvider>
   );
