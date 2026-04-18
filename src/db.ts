@@ -15,4 +15,4 @@ createEventTable();
 createSitesTable();
 createUsersTable();
 createSessionsTable();
-createAdminUser();
+await createAdminUser();

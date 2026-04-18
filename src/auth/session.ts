@@ -3,7 +3,11 @@ import "@/server-only";
 import { db } from "@/db";
 import z from "zod/v4";
 import { randomBytes, randomUUID } from "crypto";
-import { createKeysForObject, createValuesForObject } from "@/util/sql";
+import {
+  createKeysForObject,
+  createValuesForObject,
+  updateForObject,
+} from "@/util/sql";
 
 const THIRTY_MINUTES_IN_MS = 30 * 60 * 1000;
 
@@ -19,10 +23,37 @@ export const sessionSchema = z.object({
 export type Session = z.infer<typeof sessionSchema>;
 export type SessionId = Session["id"];
 
-export function getSessionByToken(token: string): Session {
-  return sessionSchema.parse(
-    db.query(`SELECT * FROM ${tableName} WHERE token = :token`).get({ token }),
-  );
+function getExpiration() {
+  return Date.now() + THIRTY_MINUTES_IN_MS;
+}
+
+export function checkSession(token: string | undefined): Session | null {
+  if (!token) {
+    return null;
+  }
+
+  const session = sessionSchema
+    .nullish()
+    .parse(
+      db
+        .query(`SELECT * FROM ${tableName} WHERE token = :token`)
+        .get({ token }),
+    );
+
+  if (!session) {
+    return null;
+  }
+
+  if (session.expires < Date.now()) {
+    deleteSession(session.id);
+    return null;
+  }
+
+  const updatedSession = updateSession(session.id, {
+    expires: getExpiration(),
+  });
+
+  return updatedSession;
 }
 
 export function createSession(userId: string): Session {
@@ -30,9 +61,13 @@ export function createSession(userId: string): Session {
     id: randomUUID(),
     user_id: userId,
     token: randomBytes(32).toString("hex"),
-    expires: Date.now() + THIRTY_MINUTES_IN_MS,
+    expires: getExpiration(),
   };
   const validData = sessionSchema.parse(data);
+
+  // Clean up any old sessions -- this just needs to run every now and then
+  deleteExpiredSessions();
+
   return sessionSchema.parse(
     db
       .query(
@@ -42,6 +77,36 @@ export function createSession(userId: string): Session {
       )
       .get(validData),
   );
+}
+
+export function updateSession(
+  id: SessionId,
+  data: Partial<Session>,
+): Session | null {
+  const validData = sessionSchema.partial().parse(data);
+  const result = db
+    .query(
+      `UPDATE ${tableName} SET ${updateForObject(
+        validData,
+      )} WHERE id = :id RETURNING *`,
+    )
+    .get({
+      ...validData,
+      id,
+    });
+  return result ? sessionSchema.parse(result) : null;
+}
+
+export function deleteSession(id: SessionId) {
+  db.query(`DELETE FROM ${tableName} WHERE id = :id`).get({
+    id,
+  });
+}
+
+export function deleteExpiredSessions() {
+  db.query(
+    `DELETE FROM ${tableName} WHERE expires < (unixepoch() * 1000)`,
+  ).run();
 }
 
 export function createSessionsTable() {

@@ -3,12 +3,7 @@ import { z } from "zod/v4";
 import { randomUUID } from "crypto";
 import dashboardIndex from "@/dashboard/index.html";
 import { getUserId } from "@/util/user-id";
-import {
-  DASHBOARD_PORT,
-  DEFAULT_TRACKER_KEY,
-  PORT,
-  TRACKER_KEY,
-} from "@/config";
+import { DEFAULT_TRACKER_KEY, PORT, TRACKER_KEY } from "@/config";
 import {
   createEvent,
   getAllEvents,
@@ -26,7 +21,7 @@ import {
   deleteSite,
 } from "@/sites/model";
 import { getUserByUsernameAndPassword } from "@/auth/user";
-import { createSession } from "@/auth/session";
+import { checkSession, createSession } from "@/auth/session";
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -43,11 +38,12 @@ const finishApiSchema = z.object({
 
 export function startServer() {
   Bun.serve({
-    port: DASHBOARD_PORT,
+    port: PORT,
     routes: {
       "/": dashboardIndex,
       "/api/events": {
         GET: (req: Bun.BunRequest<"/api/events">) => {
+          requireUserSession(req);
           const queryParams = new URLSearchParams(new URL(req.url).search);
           const siteId = queryParams.get("siteId");
           if (!siteId) {
@@ -59,34 +55,39 @@ export function startServer() {
       },
       "/api/event/:id": {
         GET: (req) => {
+          requireUserSession(req);
           return Response.json(getEventById(req.params.id));
         },
       },
       "/api/sites": {
         GET: (req) => {
+          requireUserSession(req);
           return Response.json(getAllSites());
         },
         POST: async (req) => {
+          requireUserSession(req);
           return Response.json(createSite(await req.json()));
         },
       },
       "/api/sites/:id": {
         POST: async (req) => {
+          requireUserSession(req);
           return Response.json(updateSite(req.params.id, await req.json()));
         },
         DELETE: async (req) => {
+          requireUserSession(req);
           return Response.json(deleteSite(req.params.id));
         },
       },
       "/auth/login": {
         POST: async (req: Bun.BunRequest<"/auth/login">) => {
           const body = await req.json();
-          const user = getUserByUsernameAndPassword(
+          const user = await getUserByUsernameAndPassword(
             body?.username,
             body?.password,
           );
           if (!user) {
-            return new Response("Invalid login", { status: 403 });
+            throw new Response("Invalid login", { status: 403 });
           }
           const session = createSession(user.id);
           return Response.json({
@@ -94,12 +95,9 @@ export function startServer() {
           });
         },
       },
-    },
-  });
 
-  Bun.serve({
-    port: PORT,
-    routes: {
+      // Begin public routes
+
       "/:key/tracker.js": {
         GET: async (req) => {
           if (req.params.key !== TRACKER_KEY)
@@ -201,7 +199,20 @@ export function startServer() {
         },
       },
     },
+    error(error) {
+      if (error instanceof Response) {
+        return error;
+      }
+      return new Response(error?.message ?? "Unknown error", { status: 500 });
+    },
   });
   console.log(`Listening on port ${PORT}`);
-  console.log(`Dashboard listening on port ${DASHBOARD_PORT}`);
+}
+
+function requireUserSession<T extends string>(req: Bun.BunRequest<T>) {
+  if (
+    !checkSession(req.headers.get("authorization")?.replace(/^Bearer /, ""))
+  ) {
+    throw new Response("Invalid session", { status: 403 });
+  }
 }

@@ -2,7 +2,6 @@ import "@/server-only";
 
 export const DB_FILE = process.env.DB_FILE || "local/db.sqlite";
 export const PORT = process.env.PORT || 3000;
-export const DASHBOARD_PORT = process.env.DASHBOARD_PORT || 3001;
 
 // NOTE: If updating DEFAULT_TRACKER_KEY, replace in tracker.ts script as well.
 export const DEFAULT_TRACKER_KEY = "Zk6oRyceUNh";
