@@ -16,6 +16,10 @@ export const userSchema = z.object({
 export type User = z.infer<typeof userSchema>;
 export type UserId = User["id"];
 
+export interface UserWithPassword extends Omit<User, "password_hash"> {
+  password: string;
+}
+
 const ADMIN_USER_ID = "0575b8d3-78c5-4f0b-ae68-c5c9741a4139";
 
 export function getUser(id: string): User | null {
@@ -24,23 +28,28 @@ export function getUser(id: string): User | null {
     .parse(db.query(`SELECT * FROM ${tableName} WHERE id = :id`).get({ id }));
 }
 
-export function getUserByUsernameAndPassword(
+export async function getUserByUsernameAndPassword(
   username: string,
   password: string,
-): User | null {
-  return userSchema
+): Promise<User | null> {
+  const user = userSchema
     .nullable()
     .parse(
       db
-        .query(
-          `SELECT * FROM ${tableName} WHERE username = :username AND password_hash = :password`,
-        )
-        .get({ username, password }),
+        .query(`SELECT * FROM ${tableName} WHERE username = :username`)
+        .get({ username }),
     );
+  if (user && (await verifyPassword(password, user.password_hash))) {
+    return user;
+  }
+  return null;
 }
 
-function createUser(data: User): User {
-  const validData = userSchema.parse(data);
+async function createUser(data: UserWithPassword): Promise<User> {
+  const validData = userSchema.parse({
+    ...data,
+    password_hash: await hashPassword(data.password),
+  });
   return userSchema.parse(
     db
       .query(
@@ -52,7 +61,7 @@ function createUser(data: User): User {
   );
 }
 
-export function createAdminUser(): User {
+export async function createAdminUser(): Promise<User> {
   const existingUser = getUser(ADMIN_USER_ID);
   if (existingUser) {
     return existingUser;
@@ -60,7 +69,7 @@ export function createAdminUser(): User {
   return createUser({
     id: ADMIN_USER_ID,
     username: ADMIN_USER,
-    password_hash: ADMIN_PASSWORD,
+    password: ADMIN_PASSWORD,
   });
 }
 
@@ -70,4 +79,12 @@ export function createUsersTable() {
     username TEXT UNIQUE,
     password_hash TEXT
   ) WITHOUT ROWID`);
+}
+
+function hashPassword(cleartext: string) {
+  return Bun.password.hash(cleartext);
+}
+
+function verifyPassword(cleartext: string, hash: string) {
+  return Bun.password.verify(cleartext, hash);
 }
