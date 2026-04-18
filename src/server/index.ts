@@ -41,6 +41,8 @@ export function startServer() {
     port: PORT,
     routes: {
       "/": dashboardIndex,
+      "/login": dashboardIndex,
+      "/user": dashboardIndex,
       "/api/events": {
         GET: (req: Bun.BunRequest<"/api/events">) => {
           requireUserSession(req);

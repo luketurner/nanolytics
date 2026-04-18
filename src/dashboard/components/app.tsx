@@ -1,10 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Home } from "./home";
 import { createContext, useContext, useEffect } from "react";
 import { useImmer, type ImmerHook } from "use-immer";
 import type { SiteId } from "@/sites/schema";
-import { AuthWrapper } from "./auth-wrapper";
 import type { MaybeSession } from "../hooks/useSession";
+import { Router } from "./router";
 
 export const queryClient = new QueryClient();
 
@@ -49,9 +48,7 @@ export const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AppStateContext.Provider value={[state, setState]}>
-        <AuthWrapper>
-          <Home />
-        </AuthWrapper>
+        <Router />
       </AppStateContext.Provider>
     </QueryClientProvider>
   );

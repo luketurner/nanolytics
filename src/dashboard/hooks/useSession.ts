@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useAppState } from "../components/app";
 import { useApi } from "./useApi";
+import { useNavigate } from "@tanstack/react-router";
 
 export interface Session {
   token: string;
@@ -11,6 +12,7 @@ export type MaybeSession = Session | null;
 export const useSession = () => {
   const [appState, setAppState] = useAppState();
   const api = useApi();
+  const navigate = useNavigate();
   const login = useCallback(
     async (username: string, password: string) => {
       try {
@@ -28,6 +30,7 @@ export const useSession = () => {
             token,
           };
         });
+        navigate({ to: "/" });
       } catch (e) {
         throw new Error("Could not log in.");
       }

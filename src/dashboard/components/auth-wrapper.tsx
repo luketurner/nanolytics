@@ -1,5 +1,5 @@
+import { Navigate } from "@tanstack/react-router";
 import { useSession } from "../hooks/useSession";
-import { LoginPage } from "./login-page";
 
 export const AuthWrapper: React.FC<React.PropsWithChildren> = ({
   children,
@@ -7,7 +7,7 @@ export const AuthWrapper: React.FC<React.PropsWithChildren> = ({
   const { session } = useSession();
 
   if (!session) {
-    return <LoginPage />;
+    return <Navigate to="/login" />;
   }
   return children;
 };
