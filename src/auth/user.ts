@@ -3,6 +3,7 @@ import "@/server-only";
 import { db } from "@/db";
 import z from "zod/v4";
 import {
+  booleanFromNumber,
   createKeysForObject,
   createValuesForObject,
   updateForObject,
@@ -15,6 +16,7 @@ export const userSchema = z.object({
   id: z.uuid(),
   username: z.string().min(1).max(32),
   password_hash: z.string().min(1),
+  password_expired: z.preprocess(booleanFromNumber, z.boolean()),
 });
 
 export const passwordSchema = z.string().min(6);
@@ -55,6 +57,14 @@ export async function verifyUserPassword(user: User, password: string) {
   return verifyPassword(password, user.password_hash);
 }
 
+export function isUserPasswordExpired(userId: UserId): boolean {
+  const user = getUser(userId);
+  if (!user) {
+    throw new Error("Invalid user");
+  }
+  return user.password_expired;
+}
+
 async function createUser(data: UserWithPassword): Promise<User> {
   passwordSchema.parse(data.password);
   const validData = userSchema.parse({
@@ -81,6 +91,7 @@ export async function createAdminUser(): Promise<User> {
     id: ADMIN_USER_ID,
     username: ADMIN_USER,
     password: ADMIN_PASSWORD,
+    password_expired: true,
   });
 }
 
@@ -112,7 +123,8 @@ export function createUsersTable() {
   db.run(`CREATE TABLE IF NOT EXISTS ${tableName} (
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE,
-    password_hash TEXT
+    password_hash TEXT,
+    password_expired BOOLEAN
   ) WITHOUT ROWID`);
 }
 

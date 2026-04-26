@@ -21,7 +21,9 @@ const passwordChangeSchema = z.object({
   newPasswordConfirm: z.string().min(1),
 });
 
-export const PasswordChangeForm: React.FC = () => {
+export const PasswordChangeForm: React.FC<{
+  onSubmit?: () => void | Promise<void>;
+}> = ({ onSubmit }) => {
   const form = useForm<z.infer<typeof passwordChangeSchema>>({
     resolver: zodResolver(passwordChangeSchema),
     values: {
@@ -33,7 +35,7 @@ export const PasswordChangeForm: React.FC = () => {
 
   const updatePassword = useUpdatePassword();
 
-  const onSubmit = useCallback(
+  const handleSubmit = useCallback(
     async (data: z.infer<typeof passwordChangeSchema>) => {
       if (data.newPassword !== data.newPasswordConfirm) {
         form.setError("newPasswordConfirm", {
@@ -46,6 +48,9 @@ export const PasswordChangeForm: React.FC = () => {
         await updatePassword(data.existingPassword, data.newPassword);
         toast("Password updated successfully");
         form.reset();
+        if (onSubmit) {
+          await onSubmit();
+        }
       } catch (e) {
         const message = (e as Error).message;
         form.setError(
@@ -59,12 +64,12 @@ export const PasswordChangeForm: React.FC = () => {
         );
       }
     },
-    [form],
+    [form, onSubmit],
   );
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
         <FormField
           control={form.control}
           name="existingPassword"

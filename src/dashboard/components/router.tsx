@@ -9,6 +9,7 @@ import { LoginPage } from "./login-page";
 import { AuthWrapper } from "./auth-wrapper";
 import { UserPage } from "./user-page";
 import { SettingsPage } from "./settings-page";
+import { ExpiredPasswordPage } from "./expired-password-page";
 
 const rootRoute = createRootRoute();
 
@@ -42,6 +43,16 @@ const settingsRoute = createRoute({
   ),
 });
 
+const expiredPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/user/expired",
+  component: () => (
+    <AuthWrapper>
+      <ExpiredPasswordPage />
+    </AuthWrapper>
+  ),
+});
+
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
@@ -53,6 +64,7 @@ const routeTree = rootRoute.addChildren([
   loginRoute,
   userRoute,
   settingsRoute,
+  expiredPasswordRoute,
 ]);
 const router = createRouter({ routeTree });
 

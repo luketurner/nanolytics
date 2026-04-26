@@ -23,6 +23,7 @@ import {
 import {
   getUser,
   getUserByUsernameAndPassword,
+  isUserPasswordExpired,
   updateUser,
   verifyUserPassword,
 } from "@/auth/user";
@@ -48,6 +49,8 @@ export function startServer() {
       "/": dashboardIndex,
       "/login": dashboardIndex,
       "/user": dashboardIndex,
+      "/settings": dashboardIndex,
+      "/user/expired": dashboardIndex,
       "/api/events": {
         GET: (req: Bun.BunRequest<"/api/events">) => {
           requireUserSession(req);
@@ -88,7 +91,9 @@ export function startServer() {
       },
       "/api/user/changepassword": {
         POST: async (req) => {
-          const { user_id } = requireUserSession(req);
+          const { user_id } = requireUserSession(req, {
+            allowExpiredPassword: true,
+          });
           const user = getUser(user_id);
           const body = await req.json();
           const isValid =
@@ -99,10 +104,20 @@ export function startServer() {
             });
           }
 
+          if (body?.existingPassword === body?.newPassword) {
+            throw new Response(
+              "New password is the same as existing password",
+              {
+                status: 400,
+              },
+            );
+          }
+
           try {
             return Response.json(
               await updateUser(user.id, {
                 password: body?.newPassword,
+                password_expired: false,
               }),
             );
           } catch (e) {
@@ -255,12 +270,28 @@ export function startServer() {
   console.log(`Listening on port ${PORT}`);
 }
 
-function requireUserSession<T extends string>(req: Bun.BunRequest<T>) {
+function requireUserSession<T extends string>(
+  req: Bun.BunRequest<T>,
+  options?: { allowExpiredPassword?: boolean },
+) {
   const session = checkSession(
     req.headers.get("authorization")?.replace(/^Bearer /, ""),
   );
   if (!session) {
-    throw new Response("Invalid session", { status: 403 });
+    throw new Response("Invalid session", {
+      status: 401,
+      headers: {
+        "www-authenticate": "Bearer",
+      },
+    });
   }
+
+  if (
+    !options?.allowExpiredPassword &&
+    isUserPasswordExpired(session.user_id)
+  ) {
+    throw new Response("Expired password", { status: 403 });
+  }
+
   return session;
 }
