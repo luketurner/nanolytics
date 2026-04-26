@@ -26,7 +26,7 @@ import {
   updateUser,
   verifyUserPassword,
 } from "@/auth/user";
-import { checkSession, createSession } from "@/auth/session";
+import { checkSession, createSession, deleteSession } from "@/auth/session";
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -105,6 +105,19 @@ export function startServer() {
                 password: body?.newPassword,
               }),
             );
+          } catch (e) {
+            throw new Response("New password does not meet criteria", {
+              status: 400,
+            });
+          }
+        },
+      },
+      "/api/user/logout": {
+        POST: async (req) => {
+          const { id } = requireUserSession(req);
+          try {
+            await deleteSession(id);
+            return Response.json({ status: "ok" });
           } catch (e) {
             throw new Response("New password does not meet criteria", {
               status: 400,
