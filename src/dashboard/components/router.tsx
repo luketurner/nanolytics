@@ -8,6 +8,7 @@ import { Home } from "./home";
 import { LoginPage } from "./login-page";
 import { AuthWrapper } from "./auth-wrapper";
 import { UserPage } from "./user-page";
+import { SettingsPage } from "./settings-page";
 
 const rootRoute = createRootRoute();
 
@@ -31,13 +32,28 @@ const userRoute = createRoute({
   ),
 });
 
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/settings",
+  component: () => (
+    <AuthWrapper>
+      <SettingsPage />
+    </AuthWrapper>
+  ),
+});
+
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
   component: () => <LoginPage />,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute, userRoute]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  loginRoute,
+  userRoute,
+  settingsRoute,
+]);
 const router = createRouter({ routeTree });
 
 export const Router = () => {

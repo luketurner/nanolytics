@@ -1,4 +1,4 @@
-import { CogIcon } from "lucide-react";
+import { CogIcon, MenuIcon } from "lucide-react";
 import { useEvents, useSites } from "../hooks";
 import { useAppState, type AggregationType } from "./app";
 import { LookbackChooser } from "./lookback-chooser";
@@ -22,6 +22,15 @@ import { Settings } from "./settings";
 import { SiteMetrics } from "./site-metrics";
 import { Container } from "./container";
 import { Header } from "./header";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { useCallback } from "react";
+import { Link } from "@tanstack/react-router";
 
 export const Home = () => {
   const { data: sites } = useSites();
@@ -45,7 +54,7 @@ export const Home = () => {
 
   return (
     <Container>
-      <Header>
+      <Header rightChildren={<LookbackChooser />}>
         <Select
           disabled={!sites?.length}
           value={appState.siteId}
@@ -64,21 +73,6 @@ export const Home = () => {
             ))}
           </SelectContent>
         </Select>
-        <div className="grow"></div>
-        <LookbackChooser />
-        <Sheet>
-          <SheetTrigger>
-            <Button variant="secondary" size="icon">
-              <CogIcon />
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="w-xl sm:max-w-xl">
-            <SheetHeader>
-              <SheetTitle>Settings</SheetTitle>
-            </SheetHeader>
-            <Settings />
-          </SheetContent>
-        </Sheet>
       </Header>
       {appState.siteId ? (
         <SiteMetrics />
