@@ -86,7 +86,8 @@ export function startServer() {
         },
         DELETE: async (req) => {
           requireUserSession(req);
-          return Response.json(deleteSite(req.params.id));
+          deleteSite(req.params.id);
+          return Response.json({ status: "ok" });
         },
       },
       "/api/user/changepassword": {
