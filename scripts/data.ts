@@ -32,13 +32,13 @@ for (let i = 0; i < NUM_EVENTS; i++) {
     operating_system: randomOS(),
     user_agent: "Foo/123 NotMozilla/2.0",
     referrer: i < 250 ? "http://google.com" : null,
-    is_noscript: i > 50,
+    is_noscript: i < 50,
   });
 }
 
 function randomUrl(): string {
   const seed = Math.random();
-  return `/${Math.trunc(seed * 100)}`;
+  return `/${"a".repeat(Math.trunc(seed * 50))}`;
 }
 
 function randomDeviceType(): DeviceType {
