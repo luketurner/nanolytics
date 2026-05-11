@@ -11,6 +11,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { useLogOut } from "../hooks/useLogOut";
+import { pages } from "../pages";
 
 export const Header: React.FC<
   React.PropsWithChildren<{
@@ -34,9 +35,11 @@ export const Header: React.FC<
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
-            <LinkItem href="/">Home</LinkItem>
-            <LinkItem href="/user">User</LinkItem>
-            <LinkItem href="/settings">Settings</LinkItem>
+            {pages
+              .filter((page) => !page.hidden)
+              .map((page) => (
+                <LinkItem href={page.url}>{page.name}</LinkItem>
+              ))}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>

@@ -28,6 +28,7 @@ import {
   verifyUserPassword,
 } from "@/auth/user";
 import { checkSession, createSession, deleteSession } from "@/auth/session";
+import { pages } from "@/dashboard/pages";
 
 const recordApiSchema = z.object({
   id: z.uuid(),
@@ -46,11 +47,10 @@ export function startServer() {
   Bun.serve({
     port: PORT,
     routes: {
-      "/": dashboardIndex,
-      "/login": dashboardIndex,
-      "/user": dashboardIndex,
-      "/settings": dashboardIndex,
-      "/user/expired": dashboardIndex,
+      ...pages.reduce<Record<string, any>>((memo, page) => {
+        memo[page.url] = dashboardIndex;
+        return memo;
+      }, {}),
       "/api/events": {
         GET: (req: Bun.BunRequest<"/api/events">) => {
           requireUserSession(req);

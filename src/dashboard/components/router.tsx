@@ -3,6 +3,7 @@ import {
   createRoute,
   createRouter,
   RouterProvider,
+  type RouteComponent,
 } from "@tanstack/react-router";
 import { Home } from "./home";
 import { LoginPage } from "./login-page";
@@ -10,62 +11,49 @@ import { AuthWrapper } from "./auth-wrapper";
 import { UserPage } from "./user-page";
 import { SettingsPage } from "./settings-page";
 import { ExpiredPasswordPage } from "./expired-password-page";
+import { EventsPage } from "./events-page";
+import type { PageUrl } from "../pages";
 
 const rootRoute = createRootRoute();
 
-const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/",
-  component: () => (
+const pageComponents: Record<PageUrl, RouteComponent> = {
+  "/": () => (
     <AuthWrapper>
       <Home />
     </AuthWrapper>
   ),
-});
-
-const userRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/user",
-  component: () => (
+  "/user": () => (
     <AuthWrapper>
       <UserPage />
     </AuthWrapper>
   ),
-});
-
-const settingsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/settings",
-  component: () => (
+  "/settings": () => (
     <AuthWrapper>
       <SettingsPage />
     </AuthWrapper>
   ),
-});
-
-const expiredPasswordRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/user/expired",
-  component: () => (
+  "/user/expired": () => (
     <AuthWrapper>
       <ExpiredPasswordPage />
     </AuthWrapper>
   ),
-});
+  "/events": () => (
+    <AuthWrapper>
+      <EventsPage />
+    </AuthWrapper>
+  ),
+  "/login": () => <LoginPage />,
+};
 
-const loginRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/login",
-  component: () => <LoginPage />,
-});
-
-const routeTree = rootRoute.addChildren([
-  indexRoute,
-  loginRoute,
-  userRoute,
-  settingsRoute,
-  expiredPasswordRoute,
-]);
+const routeTree = rootRoute.addChildren(
+  Object.entries(pageComponents).map(([path, component]) =>
+    createRoute({
+      getParentRoute: () => rootRoute,
+      path,
+      component,
+    }),
+  ),
+);
 const router = createRouter({ routeTree });
 
 export const Router = () => {
