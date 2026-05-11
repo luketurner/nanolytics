@@ -1,78 +1,18 @@
-import { CogIcon, MenuIcon } from "lucide-react";
-import { useEvents, useSites } from "../hooks";
-import { useAppState, type AggregationType } from "./app";
-import { LookbackChooser } from "./lookback-chooser";
-import { PageTable } from "./page-table";
-import { Button } from "./ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "./ui/sheet";
-import { Settings } from "./settings";
-import { SiteMetrics } from "./site-metrics";
+import { CogIcon } from "lucide-react";
+import { useAppState } from "./app";
 import { Container } from "./container";
 import { Header } from "./header";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { useCallback } from "react";
-import { Link } from "@tanstack/react-router";
+import { LookbackChooser } from "./lookback-chooser";
+import { SiteMetrics } from "./site-metrics";
+import { SiteSelect } from "./site-select";
 
 export const Home = () => {
-  const { data: sites } = useSites();
-  const [appState, setAppState] = useAppState();
-
-  if (
-    sites &&
-    sites.length > 0 &&
-    (!appState.siteId || !sites.some((s) => s.id === appState.siteId))
-  ) {
-    setAppState((draft) => {
-      draft.siteId = sites[0]?.id;
-    });
-  }
-
-  if (!sites?.length && appState.siteId) {
-    setAppState((draft) => {
-      draft.siteId = undefined;
-    });
-  }
+  const [appState] = useAppState();
 
   return (
     <Container>
       <Header rightChildren={<LookbackChooser />}>
-        <Select
-          disabled={!sites?.length}
-          value={appState.siteId}
-          onValueChange={(newId) =>
-            setAppState((draft) => {
-              draft.siteId = newId;
-            })
-          }
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Site name" />
-          </SelectTrigger>
-          <SelectContent>
-            {sites?.map((site) => (
-              <SelectItem value={site.id}>{site.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SiteSelect />
       </Header>
       {appState.siteId ? (
         <SiteMetrics />
