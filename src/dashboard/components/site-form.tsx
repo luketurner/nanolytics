@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import { toast } from "sonner";
 
 export const SiteForm = ({
   site: siteId,
@@ -50,6 +51,7 @@ export const SiteForm = ({
 
   const onSubmit = (values: Site) => {
     updateSite(site.id, values);
+    toast("Site updated.");
   };
 
   return (
@@ -86,7 +88,7 @@ export const SiteForm = ({
                           <Button
                             onClick={() => {
                               field.onChange(
-                                form.getValues(`hostnames`).toSpliced(index, 1)
+                                form.getValues(`hostnames`).toSpliced(index, 1),
                               );
                             }}
                             variant="destructive"
