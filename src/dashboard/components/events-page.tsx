@@ -12,6 +12,7 @@ import {
   CollapsibleTrigger,
 } from "./ui/collapsible";
 import { useState } from "react";
+import { shortDuration } from "@/util/date";
 
 export const EventsPage: React.FC = () => {
   const { data: events } = useEvents();
@@ -35,10 +36,10 @@ export const EventsPage: React.FC = () => {
 
 const EventRow: React.FC<{ event: UserEvent }> = ({ event }) => {
   const [open, setOpen] = useState(false);
-  const duration = event.end_time ? event.end_time - event.start_time : null;
+  const duration = shortDuration(event.start_time, event.end_time);
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="grid gap-2 grid-cols-[8px_40px_192px_1fr_40px] cursor-pointer w-full text-left">
+      <CollapsibleTrigger className="grid gap-2 grid-cols-[8px_40px_192px_1fr_80px] cursor-pointer w-full text-left">
         <div>{open ? "-" : "+"}</div>
         <div className="text-right">{event.user_id}</div>
         <div>{new Date(event.start_time).toLocaleString()}</div>
@@ -49,7 +50,7 @@ const EventRow: React.FC<{ event: UserEvent }> = ({ event }) => {
           ) : duration === null ? (
             <div>N/A</div>
           ) : (
-            <div>{duration / 1000}s</div>
+            <div>{duration}</div>
           )}
         </div>
       </CollapsibleTrigger>
