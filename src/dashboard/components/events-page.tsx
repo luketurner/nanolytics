@@ -150,7 +150,11 @@ export const EventsPage: React.FC = () => {
               />
             </div>
             {filteredEvents && filteredEvents.length > 0 ? (
-              <PaginatedEventTable events={filteredEvents} />
+              <PaginatedEventTable
+                events={filteredEvents}
+                onUrlClick={setUrl}
+                onUserClick={setUserId}
+              />
             ) : (
               <Empty>
                 <EmptyHeader>
@@ -178,7 +182,11 @@ export const EventsPage: React.FC = () => {
   );
 };
 
-const PaginatedEventTable: React.FC<{ events: UserEvent[] }> = ({ events }) => {
+const PaginatedEventTable: React.FC<{
+  events: UserEvent[];
+  onUserClick: (v: string) => void;
+  onUrlClick: (v: string) => void;
+}> = ({ events, ...handlers }) => {
   const [page, setPage] = useState(0);
   const handleNextPage = useCallback(() => {
     setPage((page) => page + 1);
@@ -216,17 +224,21 @@ const PaginatedEventTable: React.FC<{ events: UserEvent[] }> = ({ events }) => {
           <ArrowRight />
         </Button>
       </div>
-      <EventTable events={paginatedEvents} />
+      <EventTable events={paginatedEvents} {...handlers} />
     </>
   );
 };
 
-const EventTable: React.FC<{ events: UserEvent[] }> = ({ events }) => {
+const EventTable: React.FC<{
+  events: UserEvent[];
+  onUserClick: (v: string) => void;
+  onUrlClick: (v: string) => void;
+}> = ({ events, ...handlers }) => {
   return (
     <div>
       {events.map((event, i) => (
         <Fragment key={event.id}>
-          <EventRow event={event} />
+          <EventRow event={event} {...handlers} />
           {i !== events.length - 1 && <div className="border-b m-3" />}
         </Fragment>
       ))}
@@ -234,7 +246,11 @@ const EventTable: React.FC<{ events: UserEvent[] }> = ({ events }) => {
   );
 };
 
-const EventRow: React.FC<{ event: UserEvent }> = ({ event }) => {
+const EventRow: React.FC<{
+  event: UserEvent;
+  onUserClick: (v: string) => void;
+  onUrlClick: (v: string) => void;
+}> = ({ event, onUserClick, onUrlClick }) => {
   const [open, setOpen] = useState(false);
   const duration = shortDuration(event.start_time, event.end_time);
   return (
@@ -247,9 +263,16 @@ const EventRow: React.FC<{ event: UserEvent }> = ({ event }) => {
             <PlusSquare strokeWidth={1} className="text-gray-500" />
           )}
         </div>
-        <div className="text-right underline">{event.user_id}</div>
+        <div className="text-right" onClick={() => onUserClick(event.user_id)}>
+          {event.user_id}
+        </div>
         <div>{new Date(event.start_time).toLocaleString()}</div>
-        <div className="overflow-x-hidden text-ellipsis">{event.url}</div>
+        <div
+          className="overflow-x-hidden text-ellipsis"
+          onClick={() => onUrlClick(event.url)}
+        >
+          {event.url}
+        </div>
         <div>
           {event.is_noscript ? (
             <Badge variant="destructive">Noscript</Badge>
@@ -263,6 +286,12 @@ const EventRow: React.FC<{ event: UserEvent }> = ({ event }) => {
       <CollapsibleContent className="grid gap-x-3 gap-y-1 m-2 grid-cols-[100px_1fr]">
         <div className="text-right">Hostname:</div>
         <div>{event.hostname}</div>
+        {event.referrer ? (
+          <>
+            <div className="text-right">Referrer:</div>
+            <div>{event.referrer}</div>
+          </>
+        ) : null}
         <div className="text-right">User Agent:</div>
         <div>
           {event.user_agent}
@@ -276,12 +305,6 @@ const EventRow: React.FC<{ event: UserEvent }> = ({ event }) => {
             <Badge variant="secondary">{browserLabel(event.browser)}</Badge>
           </div>
         </div>
-        {event.referrer ? (
-          <>
-            <div className="text-right">Referrer:</div>
-            <div>{event.referrer}</div>
-          </>
-        ) : null}
       </CollapsibleContent>
     </Collapsible>
   );
