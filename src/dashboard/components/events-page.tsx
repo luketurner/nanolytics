@@ -256,9 +256,13 @@ const EventRow: React.FC<{ event: UserEvent }> = ({ event }) => {
         <div>
           {event.user_agent}
           <div className="flex flex-row gap-2 mt-2">
-            <Badge variant="secondary">{event.device_type}</Badge>
-            <Badge variant="secondary">{event.operating_system}</Badge>
-            <Badge variant="secondary">{event.browser}</Badge>
+            <Badge variant="secondary">
+              {deviceTypeLabel(event.device_type)}
+            </Badge>
+            <Badge variant="secondary">
+              {operatingSystemLabel(event.operating_system)}
+            </Badge>
+            <Badge variant="secondary">{browserLabel(event.browser)}</Badge>
           </div>
         </div>
         {event.referrer ? (
