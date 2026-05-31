@@ -29,6 +29,36 @@ export interface ParsedUserAgent {
   deviceType: DeviceType;
 }
 
+export function browserLabel(v: BrowserType): string {
+  return {
+    edge: "Edge",
+    chrome: "Chrome",
+    firefox: "Firefox",
+    safari: "Safari",
+    other: "Other",
+  }[v];
+}
+
+export function operatingSystemLabel(v: OperatingSystem): string {
+  return {
+    windows: "Windows",
+    linux: "Linux",
+    android: "Android",
+    ios: "iOS",
+    osx: "OS X",
+    "windows-phone": "Windows Phone",
+    other: "Other",
+  }[v];
+}
+
+export function deviceTypeLabel(v: DeviceType): string {
+  return {
+    mobile: "Mobile",
+    desktop: "Desktop",
+    other: "Other",
+  }[v];
+}
+
 export function parseUserAgent(ua: string) {
   const result: ParsedUserAgent = {
     raw: ua,

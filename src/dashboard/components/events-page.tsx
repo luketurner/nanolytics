@@ -11,16 +11,71 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./ui/collapsible";
-import { Fragment, useCallback, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { shortDuration } from "@/util/date";
 import { Badge } from "./ui/badge";
-import { ArrowLeft, ArrowRight, MinusSquare, PlusSquare } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  MinusSquare,
+  PlusSquare,
+  X,
+} from "lucide-react";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "./ui/empty";
+import { FilterSelect } from "./filter-select";
+import {
+  browserLabel,
+  deviceTypeLabel,
+  operatingSystemLabel,
+  type BrowserType,
+  type DeviceType,
+  type OperatingSystem,
+} from "@/util/user-agent";
 
 export const EventsPage: React.FC = () => {
   const { data: events } = useEvents();
 
-  const sortedEvents = events?.toSorted((a, b) => b.start_time - a.start_time);
+  const sortedEvents = useMemo(() => {
+    return events?.toSorted((a, b) => b.start_time - a.start_time);
+  }, [events]);
+
+  const [userId, setUserId] = useState("");
+  const [browser, setBrowser] = useState("");
+  const [device, setDevice] = useState("");
+  const [os, setOs] = useState("");
+  const [hostname, setHostname] = useState("");
+  const [referrer, setReferrer] = useState("");
+  const [url, setUrl] = useState("");
+
+  const userIds = new Set<string>();
+  const browsers = new Set<BrowserType>();
+  const devices = new Set<DeviceType>();
+  const oses = new Set<OperatingSystem>();
+  const hostnames = new Set<string>();
+  const referrers = new Set<string>();
+  const urls = new Set<string>();
+
+  for (const event of events ?? []) {
+    userIds.add(event.user_id);
+    browsers.add(event.browser);
+    devices.add(event.device_type);
+    oses.add(event.operating_system);
+    if (event.hostname) hostnames.add(event.hostname);
+    if (event.referrer) referrers.add(event.referrer);
+    urls.add(event.url);
+  }
+
+  const filteredEvents = sortedEvents?.filter((event) => {
+    if (userId && event.user_id !== userId) return false;
+    if (browser && event.browser !== browser) return false;
+    if (device && event.device_type !== device) return false;
+    if (os && event.operating_system !== os) return false;
+    if (hostname && event.hostname !== hostname) return false;
+    if (referrer && event.referrer !== referrer) return false;
+    if (url && event.url !== url) return false;
+    return true;
+  });
+
   return (
     <Container>
       <Header rightChildren={<LookbackChooser />}>
@@ -30,15 +85,79 @@ export const EventsPage: React.FC = () => {
         <SiteSelect />
       </Header>
       <div className="w-2xl m-auto">
-        {sortedEvents && sortedEvents.length > 0 ? (
-          <PaginatedEventTable events={sortedEvents} />
+        {filteredEvents && filteredEvents.length > 0 ? (
+          <>
+            <div className="flex flex-row flex-wrap gap-4">
+              <FilterSelect
+                placeholder="User ID"
+                value={userId}
+                onChange={setUserId}
+                items={Array.from(userIds).map((v) => ({ label: v, value: v }))}
+              />
+              <FilterSelect
+                placeholder="Browser"
+                value={browser}
+                onChange={setBrowser}
+                items={Array.from(browsers).map((v) => ({
+                  label: browserLabel(v),
+                  value: v,
+                }))}
+              />
+              <FilterSelect
+                placeholder="Device"
+                value={device}
+                onChange={setDevice}
+                items={Array.from(devices).map((v) => ({
+                  label: deviceTypeLabel(v),
+                  value: v,
+                }))}
+              />
+              <FilterSelect
+                placeholder="OS"
+                value={os}
+                onChange={setOs}
+                items={Array.from(oses).map((v) => ({
+                  label: operatingSystemLabel(v),
+                  value: v,
+                }))}
+              />
+              <FilterSelect
+                placeholder="Hostname"
+                value={hostname}
+                onChange={setHostname}
+                items={Array.from(hostnames).map((v) => ({
+                  label: v,
+                  value: v,
+                }))}
+              />
+              <FilterSelect
+                placeholder="Referrer"
+                value={referrer}
+                onChange={setReferrer}
+                items={Array.from(referrers).map((v) => ({
+                  label: v,
+                  value: v,
+                }))}
+              />
+              <FilterSelect
+                placeholder="URL"
+                value={url}
+                onChange={setUrl}
+                items={Array.from(urls).map((v) => ({
+                  label: v,
+                  value: v,
+                }))}
+              />
+            </div>
+            <PaginatedEventTable events={filteredEvents} />
+          </>
         ) : (
           <Empty>
             <EmptyHeader>
-              <EmptyTitle>No Events</EmptyTitle>
+              <EmptyTitle>No Matching Events</EmptyTitle>
               <EmptyDescription>
-                Your site hasn't received any traffic within the selected date
-                range.
+                Your site hasn't received any traffic with the selected filters
+                and date range.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
