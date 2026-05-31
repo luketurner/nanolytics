@@ -33,7 +33,7 @@ import {
 } from "@/util/user-agent";
 
 export const EventsPage: React.FC = () => {
-  const { data: events } = useEvents();
+  const { data: events, isLoading } = useEvents();
 
   const sortedEvents = useMemo(() => {
     return events?.toSorted((a, b) => b.start_time - a.start_time);
@@ -46,6 +46,7 @@ export const EventsPage: React.FC = () => {
   const [hostname, setHostname] = useState("");
   const [referrer, setReferrer] = useState("");
   const [url, setUrl] = useState("");
+  const [hasJs, setHasJs] = useState("");
 
   const userIds = new Set<string>();
   const browsers = new Set<BrowserType>();
@@ -73,6 +74,8 @@ export const EventsPage: React.FC = () => {
     if (hostname && event.hostname !== hostname) return false;
     if (referrer && event.referrer !== referrer) return false;
     if (url && event.url !== url) return false;
+    if (hasJs === "yes" && event.is_noscript) return false;
+    if (hasJs === "no" && !event.is_noscript) return false;
     return true;
   });
 
@@ -148,12 +151,27 @@ export const EventsPage: React.FC = () => {
                   value: v,
                 }))}
               />
+              <FilterSelect
+                placeholder="Noscript"
+                value={hasJs}
+                onChange={setHasJs}
+                items={[
+                  { value: "yes", label: "Javascript" },
+                  { value: "no", label: "No Javascript" },
+                ]}
+              />
             </div>
             {filteredEvents && filteredEvents.length > 0 ? (
               <PaginatedEventTable
                 events={filteredEvents}
                 onUrlClick={setUrl}
                 onUserClick={setUserId}
+                onNoscriptClick={setHasJs}
+                onBrowserClick={setBrowser}
+                onDeviceTypeClick={setDevice}
+                onOperatingSystemClick={setOs}
+                onHostnameClick={setHostname}
+                onReferrerClick={setReferrer}
               />
             ) : (
               <Empty>
@@ -166,6 +184,15 @@ export const EventsPage: React.FC = () => {
               </Empty>
             )}
           </>
+        ) : isLoading ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>Loading...</EmptyTitle>
+              <EmptyDescription>
+                Event data is being loaded. Please wait.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <Empty>
             <EmptyHeader>
@@ -186,6 +213,12 @@ const PaginatedEventTable: React.FC<{
   events: UserEvent[];
   onUserClick: (v: string) => void;
   onUrlClick: (v: string) => void;
+  onNoscriptClick: (v: string) => void;
+  onBrowserClick: (v: string) => void;
+  onOperatingSystemClick: (v: string) => void;
+  onDeviceTypeClick: (v: string) => void;
+  onHostnameClick: (v: string) => void;
+  onReferrerClick: (v: string) => void;
 }> = ({ events, ...handlers }) => {
   const [page, setPage] = useState(0);
   const handleNextPage = useCallback(() => {
@@ -233,6 +266,12 @@ const EventTable: React.FC<{
   events: UserEvent[];
   onUserClick: (v: string) => void;
   onUrlClick: (v: string) => void;
+  onNoscriptClick: (v: string) => void;
+  onBrowserClick: (v: string) => void;
+  onOperatingSystemClick: (v: string) => void;
+  onDeviceTypeClick: (v: string) => void;
+  onHostnameClick: (v: string) => void;
+  onReferrerClick: (v: string) => void;
 }> = ({ events, ...handlers }) => {
   return (
     <div>
@@ -250,7 +289,23 @@ const EventRow: React.FC<{
   event: UserEvent;
   onUserClick: (v: string) => void;
   onUrlClick: (v: string) => void;
-}> = ({ event, onUserClick, onUrlClick }) => {
+  onNoscriptClick: (v: string) => void;
+  onBrowserClick: (v: string) => void;
+  onOperatingSystemClick: (v: string) => void;
+  onDeviceTypeClick: (v: string) => void;
+  onHostnameClick: (v: string) => void;
+  onReferrerClick: (v: string) => void;
+}> = ({
+  event,
+  onUserClick,
+  onUrlClick,
+  onNoscriptClick,
+  onBrowserClick,
+  onOperatingSystemClick,
+  onDeviceTypeClick,
+  onHostnameClick,
+  onReferrerClick,
+}) => {
   const [open, setOpen] = useState(false);
   const duration = shortDuration(event.start_time, event.end_time);
   return (
@@ -275,7 +330,9 @@ const EventRow: React.FC<{
         </div>
         <div>
           {event.is_noscript ? (
-            <Badge variant="destructive">Noscript</Badge>
+            <Badge variant="destructive" onClick={() => onNoscriptClick("no")}>
+              Noscript
+            </Badge>
           ) : duration === null ? (
             <Badge variant="secondary">Unknown</Badge>
           ) : (
@@ -284,25 +341,53 @@ const EventRow: React.FC<{
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent className="grid gap-x-3 gap-y-1 m-2 grid-cols-[100px_1fr]">
-        <div className="text-right">Hostname:</div>
-        <div>{event.hostname}</div>
+        {event.hostname ? (
+          <>
+            <div className="text-right">Hostname:</div>
+            <div
+              className="cursor-pointer underline"
+              onClick={() => onHostnameClick(event.hostname!)}
+            >
+              {event.hostname}
+            </div>
+          </>
+        ) : null}
         {event.referrer ? (
           <>
             <div className="text-right">Referrer:</div>
-            <div>{event.referrer}</div>
+            <div
+              className="cursor-pointer underline"
+              onClick={() => onReferrerClick(event.referrer!)}
+            >
+              {event.referrer}
+            </div>
           </>
         ) : null}
         <div className="text-right">User Agent:</div>
         <div>
           {event.user_agent}
           <div className="flex flex-row gap-2 mt-2">
-            <Badge variant="secondary">
+            <Badge
+              variant="secondary"
+              className="cursor-pointer"
+              onClick={() => onDeviceTypeClick(event.device_type)}
+            >
               {deviceTypeLabel(event.device_type)}
             </Badge>
-            <Badge variant="secondary">
+            <Badge
+              variant="secondary"
+              className="cursor-pointer"
+              onClick={() => onOperatingSystemClick(event.operating_system)}
+            >
               {operatingSystemLabel(event.operating_system)}
             </Badge>
-            <Badge variant="secondary">{browserLabel(event.browser)}</Badge>
+            <Badge
+              variant="secondary"
+              className="cursor-pointer"
+              onClick={() => onBrowserClick(event.browser)}
+            >
+              {browserLabel(event.browser)}
+            </Badge>
           </div>
         </div>
       </CollapsibleContent>
