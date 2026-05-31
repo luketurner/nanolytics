@@ -11,13 +11,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./ui/collapsible";
-import { useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import { shortDuration } from "@/util/date";
 import { Badge } from "./ui/badge";
-import { MinusSquare, PlusSquare } from "lucide-react";
+import { ArrowLeft, ArrowRight, MinusSquare, PlusSquare } from "lucide-react";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "./ui/empty";
 
 export const EventsPage: React.FC = () => {
   const { data: events } = useEvents();
+
   const sortedEvents = events?.toSorted((a, b) => b.start_time - a.start_time);
   return (
     <Container>
@@ -28,14 +30,77 @@ export const EventsPage: React.FC = () => {
         <SiteSelect />
       </Header>
       <div className="w-2xl m-auto">
-        {sortedEvents?.map((event, i) => (
-          <>
-            <EventRow event={event} />
-            {i !== sortedEvents.length - 1 && <div className="border-b m-3" />}
-          </>
-        ))}
+        {sortedEvents && sortedEvents.length > 0 ? (
+          <PaginatedEventTable events={sortedEvents} />
+        ) : (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>No Events</EmptyTitle>
+              <EmptyDescription>
+                Your site hasn't received any traffic within the selected date
+                range.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
       </div>
     </Container>
+  );
+};
+
+const PaginatedEventTable: React.FC<{ events: UserEvent[] }> = ({ events }) => {
+  const [page, setPage] = useState(0);
+  const handleNextPage = useCallback(() => {
+    setPage((page) => page + 1);
+  }, [setPage]);
+  const handlePrevPage = useCallback(() => {
+    setPage((page) => page - 1);
+  }, [setPage]);
+
+  const pageSize = 25;
+  const paginatedEvents = events.slice(page * pageSize, (page + 1) * pageSize);
+  const hasNextPage = (page + 1) * pageSize < events.length;
+  const hasPrevPage = page > 0;
+  return (
+    <>
+      <div className="mb-2 flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handlePrevPage}
+          disabled={!hasPrevPage}
+        >
+          <ArrowLeft />
+        </Button>
+        <div className="flex-1 text-center">
+          viewing {page * pageSize + 1} to{" "}
+          {Math.min((page + 1) * pageSize, events.length)} of {events.length}{" "}
+          events
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleNextPage}
+          disabled={!hasNextPage}
+        >
+          <ArrowRight />
+        </Button>
+      </div>
+      <EventTable events={paginatedEvents} />
+    </>
+  );
+};
+
+const EventTable: React.FC<{ events: UserEvent[] }> = ({ events }) => {
+  return (
+    <div>
+      {events.map((event, i) => (
+        <Fragment key={event.id}>
+          <EventRow event={event} />
+          {i !== events.length - 1 && <div className="border-b m-3" />}
+        </Fragment>
+      ))}
+    </div>
   );
 };
 
