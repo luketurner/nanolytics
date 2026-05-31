@@ -85,7 +85,7 @@ export const EventsPage: React.FC = () => {
         <SiteSelect />
       </Header>
       <div className="w-2xl m-auto">
-        {filteredEvents && filteredEvents.length > 0 ? (
+        {events && events.length > 0 ? (
           <>
             <div className="flex flex-row flex-wrap gap-4">
               <FilterSelect
@@ -149,15 +149,26 @@ export const EventsPage: React.FC = () => {
                 }))}
               />
             </div>
-            <PaginatedEventTable events={filteredEvents} />
+            {filteredEvents && filteredEvents.length > 0 ? (
+              <PaginatedEventTable events={filteredEvents} />
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>No Matching Events</EmptyTitle>
+                  <EmptyDescription>
+                    There are no events matching your selected filters.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
           </>
         ) : (
           <Empty>
             <EmptyHeader>
-              <EmptyTitle>No Matching Events</EmptyTitle>
+              <EmptyTitle>No Events</EmptyTitle>
               <EmptyDescription>
-                Your site hasn't received any traffic with the selected filters
-                and date range.
+                Your site hasn't received any traffic in the selected date
+                range.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
